@@ -1,0 +1,69 @@
+TP-NOTE 
+INTIALISATION 
+    docker : 
+        spring-boot
+        jdk 17 
+        postgres 15  
+
+PARTIE 1 
+PAR SEMESTRE 
+    Affihcage 
+        URL://api/students/idStudent/semesters/idSemester/notes
+        Response:
+            {
+                status:""
+                data:"
+                liste ny ato ny url ao ambony
+                    {
+                        student:
+                        {
+                            id:
+                            etu
+                            name:
+                            born:
+                            Specialisation:
+                            {
+                                idSpecialisaotion:
+                            }
+                        }
+                    }
+                "
+                error:""
+            } 
+    Fonction
+        getAllnote(idStudent,idSemester)
+    Base 
+    Avancement
+    Session
+    semesters
+
+PAR aANNE 
+    Affihcage 
+        URL://api/students/idStudent/anne/idanne/notes
+        Response:
+            {
+                status:""
+                data:"
+                liste ny ato ny url ao ambony
+                    {
+                        student:
+                        {
+                            id:
+                            etu
+                            name:
+                            born:
+                            Specialisation:
+                            {
+                                idSpecialisaotion:
+                            }
+                        }
+                    }
+                "
+                error:""
+            } 
+    Fonction
+        getAllnote(idStudent,anne)
+    Base 
+    Avancement
+    Session
+    semesters
