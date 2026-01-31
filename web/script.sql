@@ -40,8 +40,8 @@ INSERT INTO type_account (name_type) VALUES
 ('manager');
 
 INSERT INTO users (username, password, email, id_type_account) VALUES
-('user01', 'test1', 'user01@test.com', 1),
-('manager01', 'test2', 'manager01@test.com', 2);
+('user01', 'test123456', 'user01@test.com', 1),
+('manager01', 'test123456', 'manager01@test.com', 2);
 
 INSERT INTO entreprise (name_entreprise) VALUES
 ('Société Tana Construction'),
