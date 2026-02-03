@@ -133,6 +133,42 @@ function MapViewLogged({ onLogout }: Props) {
   //   }
   // };
 
+  const handleSync = async () => {
+    try {
+      const apis = [
+        { name: "Utilisateurs", url: "http://localhost:5000/api/firestore-to-postgres/postgres-to-firebase-users" },
+        { name: "Générale", url: "http://localhost:5000/api/firestore-to-postgres/postgres-to-firebase" },
+        { name: "Firebase → PostgreSQL", url: "http://localhost:5000/api/firestore-to-postgres/" }
+      ];
+  
+      const results = [];
+  
+      for (const api of apis) {
+        try {
+          alert(`Debut de la synchronisation appuyer pour synchorniser  ${api.name} en cours... attender environ 2 min pour la synchronisation ⏳`);
+          const response = await axios.post(api.url);
+          results.push({ name: api.name, success: true, data: response.data });
+          console.log(`✅ ${api.name} synchronisé`);
+        } catch (error) {
+          results.push({ name: api.name, success: false, error: error.message });
+          console.error(`❌ ${api.name} échoué:`, error.message);
+        }
+      }
+  
+      // Afficher le résumé
+      const successfulCount = results.filter(r => r.success).length;
+      alert(`Synchronisation terminée!\n\nSuccès: ${successfulCount}/3\nÉchecs: ${3 - successfulCount}`);
+  
+      // Recharger les points
+      const res = await axios.get("http://localhost:5000/api/points");
+      setPoints(res.data);
+  
+    } catch (err: any) {
+      alert("Erreur de synchronisation ❌");
+      console.error(err);
+    }
+  };
+
   const getStatusOfPoint = (status: string | undefined | null) => {
     if (!status) return "Aucun status";
     if (status === "1") return "Nouveau";
@@ -194,19 +230,21 @@ function MapViewLogged({ onLogout }: Props) {
         onClick={handleSync}
         style={{
           position: "absolute",
-          top: 80, // juste sous Déconnexion
-          right: 20,
+          top: 180,
+          left: 1300,
           zIndex: 1000,
           padding: "14px 24px",
-          backgroundColor: "#facc15", // jaune
-          color: "black",
+          backgroundColor: "#059669",
+          color: "white",
           border: "none",
           borderRadius: 12,
           cursor: "pointer",
           fontWeight: 700,
+          fontSize: "16px",
+          boxShadow: "0 6px 12px rgba(0,0,0,0.25)",
         }}
       >
-        🔄 Synchroniser
+        Synchroniser
       </button>
 
       {/* ===== MODAL INSCRIPTION ===== */}
