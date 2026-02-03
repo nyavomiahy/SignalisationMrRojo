@@ -343,7 +343,7 @@ function MapView({ onLoginSuccess }: Props) {
   
       for (const api of apis) {
         try {
-          alert(`Synchronisation ${api.name} en cours... ⏳`);
+          alert(`Debut de la synchronisation appuyer pour synchorniser  ${api.name} en cours... attender environ 2 min pour la synchronisation⏳`);
           const response = await axios.post(api.url);
           results.push({ name: api.name, success: true, data: response.data });
           console.log(`✅ ${api.name} synchronisé`);
