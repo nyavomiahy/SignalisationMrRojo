@@ -1,4 +1,3 @@
-import { MapContainer, TileLayer, Marker, Tooltip } from "react-leaflet";
 import { useEffect, useMemo, useState } from "react";
 import axios from "axios";
 import "leaflet/dist/leaflet.css";
@@ -8,6 +7,7 @@ import L from "leaflet";
 import markerIcon2x from "leaflet/dist/images/marker-icon-2x.png";
 import markerIcon from "leaflet/dist/images/marker-icon.png";
 import markerShadow from "leaflet/dist/images/marker-shadow.png";
+import { MapContainer, TileLayer, Marker, Popup } from "react-leaflet";
 
 import { useNavigate } from "react-router-dom";
 
