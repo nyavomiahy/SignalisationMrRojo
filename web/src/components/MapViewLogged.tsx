@@ -480,6 +480,42 @@ function MapViewLogged({ onLogout }: Props) {
     }
   };
 
+  const handleSync = async () => {
+    try {
+      const apis = [
+        { name: "Utilisateurs", url: "http://localhost:5000/api/firestore-to-postgres/postgres-to-firebase-users" },
+        { name: "Générale", url: "http://localhost:5000/api/firestore-to-postgres/postgres-to-firebase" },
+        { name: "Firebase → PostgreSQL", url: "http://localhost:5000/api/firestore-to-postgres/" }
+      ];
+  
+      const results = [];
+  
+      for (const api of apis) {
+        try {
+          alert(`Debut de la synchronisation appuyer pour synchorniser  ${api.name} en cours... attender environ 2 min pour la synchronisation ⏳`);
+          const response = await axios.post(api.url);
+          results.push({ name: api.name, success: true, data: response.data });
+          console.log(`✅ ${api.name} synchronisé`);
+        } catch (error) {
+          results.push({ name: api.name, success: false, error: error.message });
+          console.error(`❌ ${api.name} échoué:`, error.message);
+        }
+      }
+  
+      // Afficher le résumé
+      const successfulCount = results.filter(r => r.success).length;
+      alert(`Synchronisation terminée!\n\nSuccès: ${successfulCount}/3\nÉchecs: ${3 - successfulCount}`);
+  
+      // Recharger les points
+      const res = await axios.get("http://localhost:5000/api/points");
+      setPoints(res.data);
+  
+    } catch (err: any) {
+      alert("Erreur de synchronisation ❌");
+      console.error(err);
+    }
+  };
+
   const getStatusOfPoint = (status: string | undefined | null) => {
     if (!status) return "Aucun status";
     if (status === "1") return "Nouveau";

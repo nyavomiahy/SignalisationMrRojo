@@ -67,39 +67,59 @@ function MapView({ onLoginSuccess }: Props) {
       .catch((err) => console.error(err));
   }, []);
 
-  const handleSync = async () => {
-    try {
-      const apis = [
-        { name: "Utilisateurs", url: "http://localhost:5000/api/firestore-to-postgres/postgres-to-firebase-users" },
-        { name: "Générale", url: "http://localhost:5000/api/firestore-to-postgres/postgres-to-firebase" },
-        { name: "Firebase → PostgreSQL", url: "http://localhost:5000/api/firestore-to-postgres/" }
-      ];
+  //const handleSync = async () => {
+  //  try {
+  //    await axios.post("http://localhost:5000/api/firestore-to-postgres/postgres-to-firebase-users");
+//
+  //    alert("Synchronisation réussie ✅");
+//
+  //    // recharger les points après sync
+  //    const res = await axios.get("http://localhost:5000/api/points");
+  //    setPoints(res.data);
+//
+  //  } catch (err: any) {
+  //    alert("Erreur de synchronisation ❌");
+  //    console.error(err);
+  //  }
+  //};
+
+  // Niovaaaa
+
+  // const handleSync = async () => {
+  //   try {
+  //     const apis = [
+  //       { name: "Utilisateurs", url: "http://localhost:5000/api/firestore-to-postgres/postgres-to-firebase-users" },
+  //       { name: "Générale", url: "http://localhost:5000/api/firestore-to-postgres/postgres-to-firebase" },
+  //       { name: "Firebase → PostgreSQL", url: "http://localhost:5000/api/firestore-to-postgres/" }
+  //     ];
   
-      const results = [];
+  //     const results = [];
   
-      for (const api of apis) {
-        try {
-          alert(`Synchronisation ${api.name} en cours... ⏳`);
-          const response = await axios.post(api.url);
-          results.push({ name: api.name, success: true, data: response.data });
-          console.log(`✅ ${api.name} synchronisé`);
-        } catch (error) {
-          results.push({ name: api.name, success: false, error: error.message });
-          console.error(`❌ ${api.name} échoué:`, error.message);
-        }
-      }
+  //     for (const api of apis) {
+  //       try {
+  //         alert(`Debut de la synchronisation appuyer pour synchorniser  ${api.name} en cours... attender environ 2 min pour la synchronisation ⏳`);
+  //         const response = await axios.post(api.url);
+  //         results.push({ name: api.name, success: true, data: response.data });
+  //         console.log(`✅ ${api.name} synchronisé`);
+  //       } catch (error) {
+  //         results.push({ name: api.name, success: false, error: error.message });
+  //         console.error(`❌ ${api.name} échoué:`, error.message);
+  //       }
+  //     }
   
-      const successfulCount = results.filter(r => r.success).length;
-      alert(`Synchronisation terminée!\n\nSuccès: ${successfulCount}/3\nÉchecs: ${3 - successfulCount}`);
+  //     // Afficher le résumé
+  //     const successfulCount = results.filter(r => r.success).length;
+  //     alert(`Synchronisation terminée!\n\nSuccès: ${successfulCount}/3\nÉchecs: ${3 - successfulCount}`);
   
-      const res = await axios.get("http://localhost:5000/api/points");
-      setPoints(res.data);
+  //     // Recharger les points
+  //     const res = await axios.get("http://localhost:5000/api/points");
+  //     setPoints(res.data);
   
-    } catch (err: any) {
-      alert("Erreur de synchronisation ❌");
-      console.error(err);
-    }
-  };
+  //   } catch (err: any) {
+  //     alert("Erreur de synchronisation ❌");
+  //     console.error(err);
+  //   }
+  // };
 
   const getStatusOfPoint = (status: string | undefined | null) => {
     if (!status) return "Aucun status";
@@ -198,7 +218,7 @@ function MapView({ onLoginSuccess }: Props) {
       >
         Login
       </button>
-      <button
+      {/* <button
         onClick={handleSync}
         style={{
           position: "absolute",
@@ -217,8 +237,10 @@ function MapView({ onLoginSuccess }: Props) {
         }}
       >
         Synchroniser
-      </button>
-      <button
+      </button> */}
+
+      {/* Bouton récapitulatif */}
+        <button
         onClick={() => setIsRecapOpen(true)}
         style={{
           position: "absolute",
