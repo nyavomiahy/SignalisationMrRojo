@@ -469,16 +469,16 @@ function MapViewLogged({ onLogout }: Props) {
     }
   };
 
-  const handleSync = async () => {
-    try {
-      const res = await axios.post("http://localhost:5000/api/sync");
-      alert(res.data.message);
-      fetchPoints(); // Rafraîchir les points depuis Postgres après sync
-    } catch (err) {
-      console.error(err);
-      alert("Erreur de synchronisation");
-    }
-  };
+  // const handleSync = async () => {
+  //   try {
+  //     const res = await axios.post("http://localhost:5000/api/sync");
+  //     alert(res.data.message);
+  //     fetchPoints(); // Rafraîchir les points depuis Postgres après sync
+  //   } catch (err) {
+  //     console.error(err);
+  //     alert("Erreur de synchronisation");
+  //   }
+  // };
 
   const handleSync = async () => {
     try {
