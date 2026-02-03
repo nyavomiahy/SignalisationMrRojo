@@ -81,17 +81,17 @@ function MapView({ onLoginSuccess }: Props) {
   
   //     const results = [];
   
-  //     for (const api of apis) {
-  //       try {
-  //         alert(`Synchronisation ${api.name} en cours... ⏳`);
-  //         const response = await axios.post(api.url);
-  //         results.push({ name: api.name, success: true, data: response.data });
-  //         console.log(`✅ ${api.name} synchronisé`);
-  //       } catch (error) {
-  //         results.push({ name: api.name, success: false, error: error.message });
-  //         console.error(`❌ ${api.name} échoué:`, error.message);
-  //       }
-  //     }
+      for (const api of apis) {
+        try {
+          alert(`Synchronisation ${api.name} en cours... ⏳`);
+          const response = await axios.post(api.url);
+          results.push({ name: api.name, success: true, data: response.data });
+          console.log(`✅ ${api.name} synchronisé`);
+        } catch (error) {
+          results.push({ name: api.name, success: false, error: error.message });
+          console.error(`❌ ${api.name} échoué:`, error.message);
+        }
+      }
   
   //     // Afficher le résumé
   //     const successfulCount = results.filter(r => r.success).length;
