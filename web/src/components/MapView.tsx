@@ -1,249 +1,3 @@
-// import { MapContainer, TileLayer, Marker, Tooltip } from "react-leaflet";
-// import { useEffect, useMemo, useState } from "react";
-// import axios from "axios";
-// import "leaflet/dist/leaflet.css";
-// import "./MapView.css";
-
-// import L from "leaflet";
-// import markerIcon2x from "leaflet/dist/images/marker-icon-2x.png";
-// import markerIcon from "leaflet/dist/images/marker-icon.png";
-// import markerShadow from "leaflet/dist/images/marker-shadow.png";
-
-// import { useNavigate } from "react-router-dom";
-
-// const DefaultIcon = L.icon({
-//   iconUrl: markerIcon,
-//   iconRetinaUrl: markerIcon2x,
-//   shadowUrl: markerShadow,
-//   iconSize: [25, 41],
-//   iconAnchor: [12, 41],
-// });
-
-// L.Marker.prototype.options.icon = DefaultIcon;
-
-// type Point = {
-//   id_point: number;
-//   latitude: string;
-//   longitude: string;
-//   surface: number;
-//   budget: number;
-//   nameplace: string;
-//   name_entreprise: string;
-//   status?: string | null;
-// };
-
-// type Props = {
-//   onLoginSuccess: () => void;
-// };
-
-// function MapView({ onLoginSuccess }: Props) {
-//   const [points, setPoints] = useState<Point[]>([]);
-//   const [position, setPosition] = useState<[number, number] | null>(null);
-//   const [isRecapOpen, setIsRecapOpen] = useState(false);
-
-//   // ===== AJOUT LOGIN =====
-//   const [isLoginOpen, setIsLoginOpen] = useState(false);
-//   const [email, setEmail] = useState("");
-//   const [password, setPassword] = useState("");
-
-//   const navigate = useNavigate(); // <-- redirection
-
-//   useEffect(() => {
-//     navigator.geolocation.getCurrentPosition((pos) => {
-//       setPosition([pos.coords.latitude, pos.coords.longitude]);
-//     });
-
-//     axios.get("http://localhost:5000/api/points")
-//       .then((res) => setPoints(res.data))
-//       .catch((err) => console.error(err));
-//   }, []);
-
-//   const getStatusOfPoint = (status: string | undefined | null) => {
-//     if (!status) return "Aucun status";
-//     if (status === "1") return "Nouveau";
-//     if (status === "11") return "En cours";
-//     if (status === "21") return "Terminé";
-//     return "Inconnu";
-//   };
-
-
-
-//   const recap = useMemo(() => {
-//     const totalSurface = points.reduce((acc, p) => acc + Number(p.surface), 0);
-//     const totalBudget = points.reduce((acc, p) => acc + Number(p.budget), 0);
-//     const nombrePoints = points.length;
-//     const avancement = 100; // parce qu'on affiche tous les points
-
-//     return { nombrePoints, totalSurface, totalBudget, avancement };
-//   }, [points]);
-
-
-
-
-//   // ===== FONCTION LOGIN =====
-//   const handleLogin = async (e: React.FormEvent) => {
-//     e.preventDefault();
-
-//     try {
-//       await axios.post("http://localhost:5000/api/auth/login", {
-//         email,
-//         password,
-//       });
-
-//       // pas de popup
-//       setIsLoginOpen(false);
-
-//       // redirection directe
-//       onLoginSuccess();
-//       navigate("/dashboard");
-//     } catch (err: any) {
-//       alert(err.response.data.error);
-//     }
-//   };
-
-//   if (!position) return <p>Localisation en cours...</p>;
-
-//   return (
-//     <div style={{ height: "200vh", width: "100%", position: "relative" }}>
-
-//       {/* ===== BOUTON LOGIN ===== */}
-//       <button
-//         onClick={() => setIsLoginOpen(true)}
-//         style={{
-//           position: "absolute",
-//           top: 100,
-//           left: 1300,
-//           zIndex: 1000,
-//           padding: "14px 24px",
-//           backgroundColor: "#1d4ed8",
-//           color: "white",
-//           border: "none",
-//           borderRadius: 12,
-//           cursor: "pointer",
-//           fontWeight: 700,
-//           fontSize: "16px",
-//           boxShadow: "0 6px 12px rgba(0,0,0,0.25)",
-//           transition: "transform 0.2s ease, background-color 0.2s ease",
-//         }}
-//         className="loginButton"
-//       >
-//         Login
-//       </button>
-
-//       {/* Bouton récapitulatif */}
-//       <button
-//         onClick={() => setIsRecapOpen(true)}
-//         style={{
-//           position: "absolute",
-//           top: 20,
-//           left: 1300,
-//           zIndex: 1000,
-//           padding: "14px 24px",
-//           backgroundColor: "#1d4ed8",
-//           color: "white",
-//           border: "none",
-//           borderRadius: 12,
-//           cursor: "pointer",
-//           fontWeight: 700,
-//           fontSize: "16px",
-//           boxShadow: "0 6px 12px rgba(0,0,0,0.25)",
-//           transition: "transform 0.2s ease, background-color 0.2s ease",
-//         }}
-//         onMouseEnter={(e) => {
-//           (e.currentTarget as HTMLButtonElement).style.transform = "translateY(-2px)";
-//           (e.currentTarget as HTMLButtonElement).style.backgroundColor = "#2563eb";
-//         }}
-//         onMouseLeave={(e) => {
-//           (e.currentTarget as HTMLButtonElement).style.transform = "translateY(0px)";
-//           (e.currentTarget as HTMLButtonElement).style.backgroundColor = "#1d4ed8";
-//         }}
-//       >
-//         Récapitulatif
-//       </button>
-
-//       <MapContainer center={position} zoom={13} style={{ height: "100%", width: "100%" }}>
-//         <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
-
-//         {points.map((p) => (
-//           <Marker key={p.id_point} position={[parseFloat(p.latitude), parseFloat(p.longitude)]}>
-//             <Tooltip direction="top" offset={[0, -10]} opacity={1} className="customTooltip">
-//               <div>
-//                 <b>{p.nameplace}</b>
-//                 <span>Surface: {p.surface} m²</span>
-//                 <span>Budget: {p.budget} Ariary</span>
-//                 <span>Entreprise: {p.name_entreprise}</span>
-//                 <span>Status: <b>{getStatusOfPoint(p.status)}</b></span>
-//               </div>
-//             </Tooltip>
-
-//           </Marker>
-//         ))}
-//       </MapContainer>
-
-//       {/* ===== MODAL LOGIN ===== */}
-//       {isLoginOpen && (
-//         <div className="modalOverlay">
-//           <div className="modalContent">
-//             <h2>Login</h2>
-//             <form onSubmit={handleLogin}>
-//               <input
-//                 type="email"
-//                 placeholder="Email"
-//                 value={email}
-//                 onChange={(e) => setEmail(e.target.value)}
-//                 required
-//               />
-//               <input
-//                 type="password"
-//                 placeholder="Mot de passe"
-//                 value={password}
-//                 onChange={(e) => setPassword(e.target.value)}
-//                 required
-//               />
-//               <button type="submit">Se connecter</button>
-//             </form>
-//             <button className="closeBtn" onClick={() => setIsLoginOpen(false)}>
-//               Fermer
-//             </button>
-//           </div>
-//         </div>
-//       )}
-
-//       {/* Modal récapitulatif */}
-//       {isRecapOpen && (
-//         <div className="modalOverlay">
-//           <div className="modalContent">
-//             <h2>Récapitulatif</h2>
-
-//             <table>
-//               <thead>
-//                 <tr>
-//                   <th>Nombre de points</th>
-//                   <th>Total surface</th>
-//                   <th>Avancement</th>
-//                   <th>Total budget</th>
-//                 </tr>
-//               </thead>
-//               <tbody>
-//                 <tr>
-//                   <td>{recap.nombrePoints}</td>
-//                   <td>{recap.totalSurface} m²</td>
-//                   <td>{recap.avancement} %</td>
-//                   <td>{recap.totalBudget} Ariary</td>
-//                 </tr>
-//               </tbody>
-//             </table>
-
-//             <button onClick={() => setIsRecapOpen(false)}>Fermer</button>
-//           </div>
-//         </div>
-//       )}
-//     </div>
-//   );
-// }
-
-// export default MapView;
-
 import { MapContainer, TileLayer, Marker, Tooltip } from "react-leaflet";
 import { useEffect, useMemo, useState } from "react";
 import axios from "axios";
@@ -293,7 +47,6 @@ function MapView({ onLoginSuccess }: Props) {
   const [position, setPosition] = useState<[number, number] | null>(null);
   const [isRecapOpen, setIsRecapOpen] = useState(false);
 
-  // ===== AJOUT LOGIN =====
   const [isLoginOpen, setIsLoginOpen] = useState(false);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -305,32 +58,15 @@ function MapView({ onLoginSuccess }: Props) {
       setPosition([pos.coords.latitude, pos.coords.longitude]);
     });
 
-    // 🔥 1) points
     axios.get("http://localhost:5000/api/points")
       .then((res) => setPoints(res.data))
       .catch((err) => console.error(err));
 
-    // 🔥 2) status points
     axios.get("http://localhost:5000/api/status_point")
       .then((res) => setStatusList(res.data))
       .catch((err) => console.error(err));
   }, []);
 
-  //const handleSync = async () => {
-  //  try {
-  //    await axios.post("http://localhost:5000/api/firestore-to-postgres/postgres-to-firebase-users");
-//
-  //    alert("Synchronisation réussie ✅");
-//
-  //    // recharger les points après sync
-  //    const res = await axios.get("http://localhost:5000/api/points");
-  //    setPoints(res.data);
-//
-  //  } catch (err: any) {
-  //    alert("Erreur de synchronisation ❌");
-  //    console.error(err);
-  //  }
-  //};
   const handleSync = async () => {
     try {
       const apis = [
@@ -353,11 +89,9 @@ function MapView({ onLoginSuccess }: Props) {
         }
       }
   
-      // Afficher le résumé
       const successfulCount = results.filter(r => r.success).length;
       alert(`Synchronisation terminée!\n\nSuccès: ${successfulCount}/3\nÉchecs: ${3 - successfulCount}`);
   
-      // Recharger les points
       const res = await axios.get("http://localhost:5000/api/points");
       setPoints(res.data);
   
@@ -367,7 +101,6 @@ function MapView({ onLoginSuccess }: Props) {
     }
   };
 
-  
   const getStatusOfPoint = (status: string | undefined | null) => {
     if (!status) return "Aucun status";
     if (status === "1") return "Nouveau";
@@ -383,7 +116,6 @@ function MapView({ onLoginSuccess }: Props) {
     return 0;
   };
 
-  // 🔥 Fusion points + status
   const pointsWithStatus = useMemo(() => {
     return points.map((p) => {
       const st = statusList.find((s) => s.id_point === p.id_point);
@@ -422,7 +154,6 @@ function MapView({ onLoginSuccess }: Props) {
     };
   }, [pointsWithStatus]);
 
-  // ===== FONCTION LOGIN =====
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
 
@@ -443,9 +174,7 @@ function MapView({ onLoginSuccess }: Props) {
   if (!position) return <p>Localisation en cours...</p>;
 
   return (
-    <div style={{ height: "200vh", width: "100%", position: "relative" }}>
-
-      {/* ===== BOUTON LOGIN ===== */}
+    <div style={{ height: "200vh", width: "100%", position: "relative", fontFamily: 'Inter, Arial, sans-serif', background: '#f4f6fa' }}>
       <button
         onClick={() => setIsLoginOpen(true)}
         style={{
@@ -453,18 +182,19 @@ function MapView({ onLoginSuccess }: Props) {
           top: 100,
           left: 1300,
           zIndex: 1000,
-          padding: "14px 24px",
-          backgroundColor: "#1d4ed8",
+          padding: "14px 28px",
+          background: "linear-gradient(90deg,#1d4ed8 60%,#60a5fa 100%)",
           color: "white",
           border: "none",
-          borderRadius: 12,
+          borderRadius: 16,
           cursor: "pointer",
           fontWeight: 700,
-          fontSize: "16px",
-          boxShadow: "0 6px 12px rgba(0,0,0,0.25)",
-          transition: "transform 0.2s ease, background-color 0.2s ease",
+          fontSize: "17px",
+          boxShadow: "0 4px 16px rgba(59,130,246,0.15)",
+          transition: "background 0.2s, transform 0.15s",
         }}
-        className="loginButton"
+        onMouseOver={e => e.currentTarget.style.background = '#2563eb'}
+        onMouseOut={e => e.currentTarget.style.background = 'linear-gradient(90deg,#1d4ed8 60%,#60a5fa 100%)'}
       >
         Login
       </button>
@@ -488,8 +218,6 @@ function MapView({ onLoginSuccess }: Props) {
       >
         Synchroniser
       </button>
-
-      {/* Bouton récapitulatif */}
       <button
         onClick={() => setIsRecapOpen(true)}
         style={{
@@ -497,102 +225,88 @@ function MapView({ onLoginSuccess }: Props) {
           top: 20,
           left: 1300,
           zIndex: 1000,
-          padding: "14px 24px",
-          backgroundColor: "#1d4ed8",
+          padding: "14px 28px",
+          background: "linear-gradient(90deg,#1d4ed8 60%,#60a5fa 100%)",
           color: "white",
           border: "none",
-          borderRadius: 12,
+          borderRadius: 16,
           cursor: "pointer",
           fontWeight: 700,
-          fontSize: "16px",
-          boxShadow: "0 6px 12px rgba(0,0,0,0.25)",
-          transition: "transform 0.2s ease, background-color 0.2s ease",
+          fontSize: "17px",
+          boxShadow: "0 4px 16px rgba(59,130,246,0.15)",
+          transition: "background 0.2s, transform 0.15s",
         }}
-        onMouseEnter={(e) => {
-          (e.currentTarget as HTMLButtonElement).style.transform = "translateY(-2px)";
-          (e.currentTarget as HTMLButtonElement).style.backgroundColor = "#2563eb";
-        }}
-        onMouseLeave={(e) => {
-          (e.currentTarget as HTMLButtonElement).style.transform = "translateY(0px)";
-          (e.currentTarget as HTMLButtonElement).style.backgroundColor = "#1d4ed8";
-        }}
+        onMouseOver={e => e.currentTarget.style.background = '#2563eb'}
+        onMouseOut={e => e.currentTarget.style.background = 'linear-gradient(90deg,#1d4ed8 60%,#60a5fa 100%)'}
       >
         Récapitulatif
       </button>
 
-      <MapContainer center={position} zoom={13} style={{ height: "100%", width: "100%" }}>
+      <MapContainer center={position} zoom={13} style={{ height: "100%", width: "100%", borderRadius: 18, boxShadow: '0 2px 16px rgba(0,0,0,0.08)' }}>
         <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
 
         {pointsWithStatus.map((p) => (
           <Marker key={p.id_point} position={[parseFloat(p.latitude), parseFloat(p.longitude)]}>
-            <Tooltip direction="top" offset={[0, -10]} opacity={1} className="customTooltip">
-              <div>
-                <b>{p.nameplace}</b>
-                <span>Surface: {p.surface} m²</span>
-                <span>Budget: {p.budget} Ariary</span>
-                <span>Entreprise: {p.name_entreprise}</span>
+            {/* <Tooltip direction="top" offset={[0, -10]} opacity={1} className="customTooltip">
+              <div style={{fontSize:14, minWidth:150, color:'#222'}}>
+                <b style={{color:'#2563eb'}}>{p.nameplace}</b><br/>
+                <span>Surface: <b>{p.surface} m²</b></span><br/>
+                <span>Budget: <b>{p.budget} Ariary</b></span><br/>
+                <span>Entreprise: <b>{p.name_entreprise}</b></span><br/>
                 <span>Status: <b>{getStatusOfPoint(p.status)}</b></span>
               </div>
-            </Tooltip>
+            </Tooltip> */}
+            <Popup>
+              <div style={{fontSize:14, minWidth:180, color:'#222'}}>
+              <b style={{color:'#2563eb'}}>{p.nameplace}</b><br/>
+              <span>Surface: <b>{p.surface} m²</b></span><br/>
+              <span>Budget: <b>{p.budget} Ariary</b></span><br/>
+              <span>Entreprise: <b>{p.name_entreprise}</b></span><br/>
+              <span>Status: <b>{getStatusOfPoint(p.status)}</b></span><br/>
+              <a href={p.photoUrl || '#'} target="_blank" rel="noopener noreferrer" style={{color:'#2563eb',textDecoration:'underline',fontWeight:600,marginTop:8,display:'inline-block'}}>Voir la photo</a>
+            </div>
+          </Popup>
           </Marker>
         ))}
       </MapContainer>
 
-      {/* ===== MODAL LOGIN ===== */}
       {isLoginOpen && (
-        <div className="modalOverlay">
-          <div className="modalContent">
-            <h2>Login</h2>
-            <form onSubmit={handleLogin}>
-              <input
-                type="email"
-                placeholder="Email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                required
-              />
-              <input
-                type="password"
-                placeholder="Mot de passe"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                required
-              />
-              <button type="submit">Se connecter</button>
+        <div style={{position:'fixed',inset:0,background:'rgba(0,0,0,0.45)',zIndex:2000,display:'flex',justifyContent:'center',alignItems:'center',animation:'fadeIn 0.2s'}}>
+          <div style={{background:'#fff',padding:36,borderRadius:20,width:350,boxShadow:'0 8px 32px rgba(0,0,0,0.18)',display:'flex',flexDirection:'column',gap:10}}>
+            <h2 style={{marginBottom:18, color:'#2563eb'}}>Login</h2>
+            <form onSubmit={handleLogin} style={{display:'flex',flexDirection:'column',gap:10}}>
+              <input type="email" placeholder="Email" value={email} onChange={e => setEmail(e.target.value)} required style={{padding:10,borderRadius:8,border:'1px solid #e5e7eb',fontSize:15}}/>
+              <input type="password" placeholder="Mot de passe" value={password} onChange={e => setPassword(e.target.value)} required style={{padding:10,borderRadius:8,border:'1px solid #e5e7eb',fontSize:15}}/>
+              <button type="submit" style={{background:'linear-gradient(90deg,#1d4ed8 60%,#60a5fa 100%)',color:'white',border:'none',borderRadius:8,padding:'10px 18px',fontWeight:700,cursor:'pointer',transition:'background 0.2s'}} onMouseOver={e=>e.currentTarget.style.background='#2563eb'} onMouseOut={e=>e.currentTarget.style.background='linear-gradient(90deg,#1d4ed8 60%,#60a5fa 100%)'}>Se connecter</button>
             </form>
-            <button className="closeBtn" onClick={() => setIsLoginOpen(false)}>
-              Fermer
-            </button>
+            <button onClick={() => setIsLoginOpen(false)} style={{background:'#f3f4f6',color:'#374151',border:'none',borderRadius:8,padding:'10px 18px',fontWeight:600,cursor:'pointer',transition:'background 0.2s'}} onMouseOver={e=>e.currentTarget.style.background='#e5e7eb'} onMouseOut={e=>e.currentTarget.style.background='#f3f4f6'}>Fermer</button>
           </div>
         </div>
       )}
 
-      {/* Modal récapitulatif */}
       {isRecapOpen && (
-        <div className="modalOverlay">
-          <div className="modalContent">
-            <h2>Récapitulatif</h2>
-
-            <table>
+        <div style={{position:'fixed',inset:0,background:'rgba(0,0,0,0.45)',zIndex:2000,display:'flex',justifyContent:'center',alignItems:'center',animation:'fadeIn 0.2s'}}>
+          <div style={{background:'#fff',padding:36,borderRadius:20,width:400,boxShadow:'0 8px 32px rgba(0,0,0,0.18)',display:'flex',flexDirection:'column',gap:10}}>
+            <h2 style={{marginBottom:18, color:'#2563eb'}}>Récapitulatif</h2>
+            <table style={{width:'100%',borderCollapse:'collapse',marginBottom:16}}>
               <thead>
-                <tr>
-                  <th>Nombre de points</th>
-                  <th>Total surface</th>
-                  <th>Avancement</th>
-                  <th>Total budget</th>
+                <tr style={{background:'#f3f4f6'}}>
+                  <th style={{padding:8,textAlign:'left',fontWeight:700}}>Nombre de points</th>
+                  <th style={{padding:8,textAlign:'left',fontWeight:700}}>Total surface</th>
+                  <th style={{padding:8,textAlign:'left',fontWeight:700}}>Avancement</th>
+                  <th style={{padding:8,textAlign:'left',fontWeight:700}}>Total budget</th>
                 </tr>
               </thead>
               <tbody>
                 <tr>
-                  <td>{recap.nombrePoints}</td>
-                  <td>{recap.totalSurface} m²</td>
-                  <td>{recap.avancement} %</td>
-                  <td>{recap.totalBudget} Ariary</td>
+                  <td style={{padding:8}}>{recap.nombrePoints}</td>
+                  <td style={{padding:8}}>{recap.totalSurface} m²</td>
+                  <td style={{padding:8}}>{recap.avancement} %</td>
+                  <td style={{padding:8}}>{recap.totalBudget} Ariary</td>
                 </tr>
               </tbody>
             </table>
-
-            <button onClick={() => setIsRecapOpen(false)}>Fermer</button>
+            <button onClick={() => setIsRecapOpen(false)} style={{background:'#f3f4f6',color:'#374151',border:'none',borderRadius:8,padding:'10px 18px',fontWeight:600,cursor:'pointer',transition:'background 0.2s'}} onMouseOver={e=>e.currentTarget.style.background='#e5e7eb'} onMouseOut={e=>e.currentTarget.style.background='#f3f4f6'}>Fermer</button>
           </div>
         </div>
       )}
