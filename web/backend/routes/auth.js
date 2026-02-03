@@ -2,6 +2,30 @@ const express = require("express");
 const router = express.Router();
 const pool = require("../db");
 
+/**
+ * @openapi
+ * /api/auth/login:
+ *   post:
+ *     tags:
+ *       - Auth
+ *     summary: Login user (managers)
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               email:
+ *                 type: string
+ *               password:
+ *                 type: string
+ *     responses:
+ *       '200':
+ *         description: Successful login
+ *       '401':
+ *         description: Unauthorized
+ */
 router.post("/login", async (req, res) => {
   const { email, password } = req.body;
 
@@ -30,6 +54,34 @@ router.post("/login", async (req, res) => {
   }
 });
 
+/**
+ * @openapi
+ * /api/auth/register:
+ *   post:
+ *     tags:
+ *       - Auth
+ *     summary: Register a new user
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               username:
+ *                 type: string
+ *               email:
+ *                 type: string
+ *               password:
+ *                 type: string
+ *               id_type_account:
+ *                 type: integer
+ *     responses:
+ *       '200':
+ *         description: Registration successful
+ *       '400':
+ *         description: Bad request or email already used
+ */
 router.post("/register", async (req, res) => {
   try {
     const { username, email, password, id_type_account } = req.body;
