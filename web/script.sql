@@ -35,6 +35,13 @@ CREATE TABLE status_point(
     daty DATE NOT NULL
 );
 
+CREATE TABLE image_point(
+    id_image_point SERIAL PRIMARY KEY,
+    id_point INT REFERENCES points(id_point),
+    base64 VARCHAR(255) NOT NULL
+);
+
+
 INSERT INTO type_account (name_type) VALUES
 ('user'),
 ('manager');
