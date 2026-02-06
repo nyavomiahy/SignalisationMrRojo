@@ -665,6 +665,119 @@ router.post("/postgres-to-firebase-users", async (req, res) => {
     });
   }
 });
+
+router.post("/photo_synchro", async (req, res) => {
+  try {
+    console.log(`🔍 Début de la synchronisation complète`);
+    
+    if (!admin.apps?.length) {
+      throw new Error("Firebase non initialisé");
+    }
+    
+    const db = admin.firestore();
+    
+    console.log(`📊 Récupération de tous les points depuis Firestore...`);
+    const image = await db.collection("image_point").get();
+    
+    console.log(`📊 ${image.size} image trouvés dans Firestore`);
+    
+    // Variables de comptage
+    let pointsInserted = 0;
+    let pointsUpdated = 0;
+    let pointsSkipped = 0;
+    let statusInserted = 0;
+    let statusSkipped = 0;
+    let errors = 0;
+    
+    const syncedDetails = [];
+    
+    // 3. Synchroniser les POINTS
+    console.log(`🔄 Synchronisation des points...`);
+    for (const pointDoc of image.docs) {
+      try {
+        const pointId = pointDoc.id;
+        const pointData = pointDoc.data();
+        console.log(`🔄 Synchronisation des points..........${pointId}`);
+        
+        const existingPoint = await pool.query(
+          `SELECT id_image_point FROM image_point WHERE id_image_point = $1`,
+          [pointId]
+        );
+        
+        if (existingPoint.rows.length > 0) {
+          // Point existe déjà, on peut le mettre à jour si nécessaire
+          await pool.query(
+            `UPDATE image_point 
+             SET id_point = $1, base64 = $2
+             WHERE id_image_point = $3`,
+            [
+              pointData.id_point || 0,
+              pointData.base64 ,
+              pointId
+            ]
+          );
+          pointsUpdated++;
+          console.log(`🔄 Point ${pointId} mis à jour`);
+        } else {
+          // Point n'existe pas, on l'insère
+          await pool.query(
+            `INSERT INTO image_point(id_image_point,id_point,base64)
+             VALUES ($1, $2, $3)`,
+            [
+              pointId,
+              pointData.id_point || 0,
+              pointData.base64 || 'Non spécifié',
+            ]
+          );
+          pointsInserted++;
+          console.log(`✅ Point ${pointId} inséré`);
+        }
+        
+        syncedDetails.push({
+          type: 'image_point',
+          id: pointId,
+          action: existingPoint.rows.length > 0 ? 'updated' : 'inserted'
+        });
+        
+      } catch (error) {
+        console.error(`❌ Erreur sur point ${pointDoc.id}:`, error.message);
+        errors++;
+      }
+    }
+
+    
+    console.log(`✅ Synchronisation terminée:`);
+    console.log(`📊 Points: ${pointsInserted} insérés, ${pointsUpdated} mis à jour, ${pointsSkipped} ignorés`);
+    console.log(`⚠️  Erreurs: ${errors}`);
+    
+    res.json({
+      success: true,
+      summary: {
+        totalPointsFirestore: image.size,
+        points: {
+          inserted: pointsInserted,
+          updated: pointsUpdated,
+          skipped: pointsSkipped
+        },
+        status: {
+          inserted: statusInserted,
+          skipped: statusSkipped
+        },
+        errors: errors
+      },
+      details: syncedDetails.slice(0, 100) // Limiter à 100 entrées pour la réponse
+    });
+    
+  } catch (error) {
+    console.error(`🔥 Erreur lors de la synchronisation:`, error);
+    res.status(500).json({ 
+      error: error.message,
+      success: false 
+    });
+  }
+});
+
+
 // Fonction utilitaire pour parser les dates (gardée au cas où)
 function parseFirestoreDate(dateString) {
   // Votre logique de parsing ici si nécessaire
@@ -680,6 +793,7 @@ router.get("/", (req, res) => {
       "POST / - Sync tous les statuts 'nouveau'",
       "POST /postgres-to-firebase - Sync PostgreSQL → Firestore",
       "POST /postgres-to-firebase-users - Sync utilisateurs PostgreSQL → Firebase (Auth + Firestore)",
+      "POST /photo_synchro - Sync avec date spécifique",
       "POST /by-date - Sync avec date spécifique",
       "POST /recent - Sync les récents (dernières 24h par défaut)"
     ]

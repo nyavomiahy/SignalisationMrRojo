@@ -8,6 +8,7 @@ import markerIcon2x from "leaflet/dist/images/marker-icon-2x.png";
 import markerIcon from "leaflet/dist/images/marker-icon.png";
 import markerShadow from "leaflet/dist/images/marker-shadow.png";
 import { MapContainer, TileLayer, Marker, Popup } from "react-leaflet";
+import { Link } from "react-router-dom";
 
 import { useNavigate } from "react-router-dom";
 
@@ -281,11 +282,19 @@ function MapView({ onLoginSuccess }: Props) {
             <Popup>
               <div style={{fontSize:14, minWidth:180, color:'#222'}}>
               <b style={{color:'#2563eb'}}>{p.nameplace}</b><br/>
-              <span>Surface: <b>{p.surface} m²</b></span><br/>
+              <span>Surface: <b>{p.id_point} m²</b></span><br/>
               <span>Budget: <b>{p.budget} Ariary</b></span><br/>
               <span>Entreprise: <b>{p.name_entreprise}</b></span><br/>
               <span>Status: <b>{getStatusOfPoint(p.status)}</b></span><br/>
-              <a href={p.photoUrl || '#'} target="_blank" rel="noopener noreferrer" style={{color:'#2563eb',textDecoration:'underline',fontWeight:600,marginTop:8,display:'inline-block'}}>Voir la photo</a>
+              {/* <a href={p.photoUrl || '#'} target="_blank" rel="noopener noreferrer" style={{color:'#2563eb',textDecoration:'underline',fontWeight:600,marginTop:8,display:'inline-block'}}>Voir la photo</a> */}
+              <Link to={`/image/${p.id_point}`} style={{
+                  color: "#2563eb",
+                  textDecoration: "underline",
+                  fontWeight: 600,
+                  marginTop: 8,
+                  display: "inline-block",
+                }}>Voir la photo</Link>
+
             </div>
           </Popup>
           </Marker>
@@ -335,5 +344,36 @@ function MapView({ onLoginSuccess }: Props) {
     </div>
   );
 }
+
+// // export default MapView;
+// import { useEffect, useState } from "react";
+// import axios from "axios";
+
+// function MapView() {
+//   const [image, setImage] = useState(null);
+
+//   useEffect(() => {
+//     axios
+//       .get("http://localhost:5000/api/points/images/30")
+//       .then(res => setImage(res.data))
+//       .catch(err => console.error(err));
+//   }, []);
+
+//   return (
+//     <div>
+//       <h2>Image du point</h2>
+
+//       {image && (
+//         <img
+//           src={`data:image/jpeg;base64,${image.base64}`}
+//           alt="point"
+//           style={{ width: "200px" }}
+//         />
+//       )}
+
+//       {!image && <p>Aucune image disponible</p>}
+//     </div>
+//   );
+// }
 
 export default MapView;

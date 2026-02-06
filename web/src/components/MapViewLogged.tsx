@@ -479,13 +479,15 @@ function MapViewLogged({ onLogout }: Props) {
   //     alert("Erreur de synchronisation");
   //   }
   // };
+      
 
   const handleSync = async () => {
     try {
-      const apis = [
-        { name: "Utilisateurs", url: "http://localhost:5000/api/firestore-to-postgres/postgres-to-firebase-users" },
-        { name: "Générale", url: "http://localhost:5000/api/firestore-to-postgres/postgres-to-firebase" },
-        { name: "Firebase → PostgreSQL", url: "http://localhost:5000/api/firestore-to-postgres/" }
+       const apis = [
+      //   { name: "Utilisateurs", url: "http://localhost:5000/api/firestore-to-postgres/postgres-to-firebase-users" },
+      //   { name: "postgres -> firebase", url: "http://localhost:5000/api/firestore-to-postgres/postgres-to-firebase" },
+      //   { name: "Firebase → PostgreSQL", url: "http://localhost:5000/api/firestore-to-postgres/" },
+        { name: "Synchro photo", url: "http://localhost:5000/api/firestore-to-postgres/photo_synchro" }
       ];
   
       const results = [];

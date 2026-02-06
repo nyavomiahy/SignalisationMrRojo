@@ -57,6 +57,24 @@ router.put("/:id_point", async (req, res) => {
     res.status(500).json({ error: "Erreur serveur" });
   }
 });
+router.get("/images/:idPoint", async (req, res) => {
+  try {
+    const { idPoint } = req.params;
 
+    const result = await pool.query(
+      "SELECT base64 FROM image_point WHERE id_point = $1",
+      [idPoint]
+    );
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({ message: "Image non trouvée" });
+    }
+    
+    res.json(result.rows);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Erreur serveur" });
+  }
+});
 
 module.exports = router;

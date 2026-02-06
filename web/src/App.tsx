@@ -1,6 +1,8 @@
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import MapView from "./components/MapView";
 import Dashboard from "./pages/Dashboard";
+import ImagePage from "./pages/Image";
+
 import { useState } from "react";
 
 function App() {
@@ -13,6 +15,7 @@ function App() {
           path="/"
           element={<MapView onLoginSuccess={() => setIsLogged(true)} />}
         />
+          <Route path="/image/:idPoint" element={<ImagePage />} />
         <Route
           path="/dashboard"
           element={
