@@ -24,10 +24,20 @@ app.use("/api/type_account", typeAccountRouter);
 
 //app.use("/api/sync", require("./routes/sync"));
 
+// const usersRoutes = require("./routes/users");
+// console.log("usersRoutes loaded", usersRoutes);
+// app.use("/api/users", usersRoutes);
+
+const usersRoutes = require("./routes/users");
+app.use("/api/users", usersRoutes);
+
 const ff = require("./routes/firebase-firestore");
 app.use("/api/firestore-to-postgres", ff);
 
 const PORT = process.env.PORT || 5000;
+
+const fs = require("fs");
+console.log("Fichiers dans routes :", fs.readdirSync("./routes"));
 app.listen(PORT, () => {
   console.log(`Server running on http://localhost:${PORT}`);
 });
