@@ -3,22 +3,52 @@ const router = express.Router();
 const pool = require("../db");
 
 // POST : ajouter un status
-router.post("/", async (req, res) => {
-  try {
-    const { id_point, status, daty } = req.body;
+// router.post("/", async (req, res) => {
+//   try {
+//     const { id_point, status, daty } = req.body;
 
-    await pool.query(
+//     await pool.query(
+//       "INSERT INTO status_point (id_point, status, daty) VALUES ($1, $2, $3)",
+//       [id_point, status, daty]
+//     );
+
+//     res.json({ message: "Status ajouté" });
+//   } catch (err) {
+//     console.error(err);
+//     res.status(500).json({ error: "Erreur serveur" });
+//   }
+// });
+router.post("/", async (req, res) => {
+  const client = await pool.connect();
+  try {
+    await client.query('BEGIN');
+
+    const { id_point, status, daty, niveau } = req.body;
+
+    // 1. Insérer ou mettre à jour le status_point
+    await client.query(
       "INSERT INTO status_point (id_point, status, daty) VALUES ($1, $2, $3)",
       [id_point, status, daty]
     );
 
-    res.json({ message: "Status ajouté" });
+    // 2. Mettre à jour le niveau dans la table points (si fourni)
+    if (niveau !== undefined && niveau !== null) {
+      await client.query(
+        "UPDATE points SET niveau = $1, updated_at = NOW() WHERE id_point = $2",
+        [niveau, id_point]
+      );
+    }
+
+    await client.query('COMMIT');
+    res.json({ message: "Status et niveau mis à jour avec succès" });
   } catch (err) {
+    await client.query('ROLLBACK');
     console.error(err);
     res.status(500).json({ error: "Erreur serveur" });
+  } finally {
+    client.release();
   }
 });
-
 // 🔥 GET : récupérer le status actuel d'un point (le dernier)
 router.get("/:id_point", async (req, res) => {
   try {
