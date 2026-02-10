@@ -84,25 +84,27 @@
       <div class="details-panel" :class="{ open: selectedReport !== null, fullscreen: isPanelFullscreen }"
         v-if="selectedReport" @touchstart="startDrag" @touchmove="handleDrag" @touchend="endDrag" @mousedown="startDrag"
         @mousemove="handleDrag" @mouseup="endDrag" @mouseleave="endDrag">
+        
         <!-- Handle pour glisser -->
         <div class="details-handle" @click="togglePanelHeight">
           <div class="handle-bar"></div>
         </div>
 
-        <div class="details-content" :style="{ height: panelHeight + 'px' }">
-          <div class="details-header">
-            <div class="details-title">
-              <h3>{{ selectedReport.siteName || 'Signalement routier' }}</h3>
-              <div class="details-subtitle">
-                <ion-icon :icon="locationOutline"></ion-icon>
-                <span>{{ selectedReport.locationName }}</span>
-              </div>
+        <!-- Header HORS du scroll -->
+        <div class="details-header">
+          <div class="details-title">
+            <h3>{{ selectedReport.siteName || 'Signalement routier' }}</h3>
+            <div class="details-subtitle">
+              <ion-icon :icon="locationOutline"></ion-icon>
+              <span>{{ selectedReport.locationName }}</span>
             </div>
-            <button class="details-close" @click="closeDetails">
-              <ion-icon :icon="close"></ion-icon>
-            </button>
           </div>
+          <!-- Ligne 182-184 -->
 
+        </div>
+
+        <!-- Contenu scrollable -->
+        <div class="details-content" :style="{ height: panelHeight + 'px' }">
           <!-- Photos -->
           <div class="details-photos" v-if="selectedReport.images && selectedReport.images.length > 0">
             <div class="photo-item" v-for="(image, index) in selectedReport.images" :key="index">
@@ -1166,31 +1168,63 @@ const doLogin = async () => {
   }
 };
 
+// ✅ Fonction utilitaire UNIQUE pour les deux sources
+const base64StringToFile = (base64String: string, filename: string): File => {
+  try {
+    const byteCharacters = atob(base64String);
+    const byteNumbers = new Array(byteCharacters.length);
+    
+    for (let i = 0; i < byteCharacters.length; i++) {
+      byteNumbers[i] = byteCharacters.charCodeAt(i);
+    }
+    
+    // ✅ Passer par Blob (cohérent avec galerie)
+    const byteArray = new Uint8Array(byteNumbers);
+    const blob = new Blob([byteArray], { type: 'image/jpeg' });
+    return new File([blob], filename, { type: 'image/jpeg' });
+  } catch (error) {
+    console.error('❌ Erreur conversion base64:', error);
+    throw new Error('Impossible de convertir l\'image');
+  }
+};
+
+// ✅ Caméra - Convertion cohérente + logging
 const openCamera = async () => {
   try {
+    console.log('📸 Ouverture caméra...');
+    
     const photo = await Camera.getPhoto({
       quality: 80,
-      resultType: CameraResultType.Base64, // base64 pour upload
-      source: CameraSource.Camera
+      resultType: CameraResultType.Base64,
+      source: CameraSource.Camera,
+      correctOrientation: true  // ✅ Important pour téléphone!
     });
 
-    if (!photo || !photo.base64String) return;
-
-    // Créer un "File" à partir du base64
-    const byteString = atob(photo.base64String);
-    const arrayBuffer = new Uint8Array(byteString.length);
-    for (let i = 0; i < byteString.length; i++) {
-      arrayBuffer[i] = byteString.charCodeAt(i);
+    if (!photo?.base64String) {
+      throw new Error('Aucune image capturée');
     }
-    const file = new File([arrayBuffer], `photo_${Date.now()}.jpg`, {
-      type: 'image/jpeg'
+
+    console.log('✅ Photo capturée:', {
+      base64Length: photo.base64String.length,
+      format: photo.format
     });
+
+    // ✅ Utiliser la fonction uniforme
+    const file = base64StringToFile(
+      photo.base64String,
+      `photo_camera_${Date.now()}.jpg`
+    );
+
+    console.log('📝 Fichier créé:', { name: file.name, size: file.size });
 
     newReport.value.imageFiles.push(file);
     newReport.value.imagePreviews.push(`data:image/jpeg;base64,${photo.base64String}`);
-  } catch (error) {
-    console.error('Erreur ouverture caméra:', error);
-    showToast('Impossible d\'ouvrir la caméra', 'danger');
+
+    showToast('Photo capturée avec succès', 'success');  // ✅ Feedback utilisateur
+
+  } catch (error: any) {
+    console.error('❌ Erreur caméra:', error);  // ✅ Logging détaillé
+    showToast(error?.message || 'Impossible d\'ouvrir la caméra', 'danger');
   }
 };
 
@@ -1298,6 +1332,8 @@ onMounted(async () => {
 watch(currentUser, (newVal) => {
   console.log('currentUser changé:', newVal);
 });
+
+
 </script>
 
 <style scoped>
@@ -1747,7 +1783,6 @@ ion-fab-button:disabled {
   display: flex;
   flex-direction: column;
   touch-action: none;
-  /* Important pour le glissement */
 }
 
 .details-panel.open {
@@ -1767,6 +1802,8 @@ ion-fab-button:disabled {
   justify-content: center;
   align-items: center;
   flex-shrink: 0;
+  background: white;
+  z-index: 100;
 }
 
 .details-handle:active {
@@ -1787,23 +1824,17 @@ ion-fab-button:disabled {
   height: 5px;
 }
 
-/* Contenu avec hauteur dynamique */
-.details-content {
-  overflow-y: auto;
-  overflow-x: hidden;
-  padding: 0 16px 24px;
-  flex: 1;
-  -webkit-overflow-scrolling: touch;
-  transition: height 0.2s ease;
-}
-
+/* Header FIXE (hors du scroll) */
 .details-header {
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
-  padding: 12px 0 16px;
+  padding: 12px 16px 16px 16px;
   border-bottom: 1px solid #F0F0F0;
   flex-shrink: 0;
+  background: white;
+  z-index: 101;
+  position: relative;
 }
 
 .details-title {
@@ -1826,6 +1857,7 @@ ion-fab-button:disabled {
   margin-top: 4px;
 }
 
+/* Bouton Close - Toujours Cliquable ✅ */
 .details-close {
   padding: 8px;
   background: #F8F9FA;
@@ -1839,11 +1871,34 @@ ion-fab-button:disabled {
   height: 36px;
   flex-shrink: 0;
   margin-left: 8px;
+  position: relative;
+  z-index: 102;
+  transition: all 0.2s ease;
+}
+
+.details-close:hover {
+  background: #E8EAED;
+  transform: scale(1.05);
+}
+
+.details-close:active {
+  background: #DADCE0;
+  transform: scale(0.95);
 }
 
 .details-close ion-icon {
   font-size: 20px;
   color: #5F6368;
+}
+
+/* Contenu avec hauteur dynamique (scrollable) */
+.details-content {
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding: 0 16px 24px;
+  flex: 1;
+  -webkit-overflow-scrolling: touch;
+  transition: height 0.2s ease;
 }
 
 .details-photos {
