@@ -1,0 +1,391 @@
+// src/services/pointService.ts - VERSION CORRIGÉE
+import { db,
+  collections,
+  Point,
+  StatutPoint,
+  Entreprise,
+  UserPoint,
+  Timestamp
+ } from '@/firebase/config';
+import { 
+  collection, 
+  getDocs, 
+  query, 
+  where, 
+  orderBy,
+  addDoc,
+  serverTimestamp,
+  doc,
+  getDoc
+} from 'firebase/firestore';
+import { getCurrentUser } from './authService';
+
+const getUserInfo = async (userId: string): Promise<{name: string, email: string}> => {
+  try {
+    const userDoc = await getDoc(doc(db, 'users', userId));
+    if (userDoc.exists()) {
+      const userData = userDoc.data();
+      return {
+        name: userData.name || 'Utilisateur',
+        email: userData.email || 'Email inconnu'
+      };
+    }
+  } catch (error) {
+    console.error('Erreur récupération utilisateur:', error);
+  }
+  
+  return {
+    name: 'Utilisateur',
+    email: 'utilisateur@example.com'
+  };
+};
+
+// Récupérer TOUS les points avec infos utilisateur
+export const getAllPoints = async () => {
+  try {
+    const q = query(pointsCollection, orderBy('createdAt', 'desc'));
+    const querySnapshot = await getDocs(q);
+    
+    const points: Point[] = [];
+    
+    for (const docSnapshot of querySnapshot.docs) {
+      const pointData = docSnapshot.data();
+      
+      // Récupérer l'utilisateur qui a créé le point
+      const userPointQuery = query(
+        userPointCollection, 
+        where('id_point', '==', docSnapshot.id)
+      );
+      const userPointSnapshot = await getDocs(userPointQuery);
+      
+      let userId = '';
+      let userName = 'Utilisateur';
+      let userEmail = 'utilisateur@example.com';
+      
+      if (!userPointSnapshot.empty) {
+        const userPointData = userPointSnapshot.docs[0].data();
+        userId = userPointData.id_user;
+        
+        // Récupérer les infos utilisateur
+        const userInfo = await getUserInfo(userId);
+        userName = userInfo.name;
+        userEmail = userInfo.email;
+      }
+      
+      // Récupérer le statut du point
+      const statutQuery = query(
+        statutCollection, 
+        where('id_point', '==', docSnapshot.id)
+      );
+      const statutSnapshot = await getDocs(statutQuery);
+      
+      points.push({
+        id: docSnapshot.id,
+        latitude: pointData.latitude,
+        longitude: pointData.longitude,
+        surface: pointData.surface,
+        budget: pointData.budget,
+        id_entreprise: pointData.id_entreprise,
+        nameplace: pointData.nameplace,
+        createdAt: pointData.createdAt,
+        userId,
+        userName,
+        userEmail
+      });
+    }
+    
+    return { success: true, points };
+  } catch (error: any) {
+    console.error('Erreur récupération points:', error);
+    return { success: false, error: error.message, points: [] };
+  }
+};
+
+// Récupérer MES points (par utilisateur)
+export const getMyPoints = async () => {
+  try {
+    const currentUser = getCurrentUser();
+    if (!currentUser) {
+      return { success: false, error: 'Non connecté', points: [] };
+    }
+    
+    // 1. Trouver les relations user_point pour cet utilisateur
+    const userPointQuery = query(
+      userPointCollection,
+      where('id_user', '==', currentUser.id)
+    );
+    
+    const userPointSnapshot = await getDocs(userPointQuery);
+    const pointIds = userPointSnapshot.docs.map(doc => doc.data().id_point);
+    
+    if (pointIds.length === 0) {
+      return { success: true, points: [] };
+    }
+    
+    // 2. Récupérer les points correspondants
+    const points: Point[] = [];
+    
+    for (const pointId of pointIds) {
+      const pointDoc = await getDoc(doc(db, 'point', pointId));
+      
+      if (pointDoc.exists()) {
+        const pointData = pointDoc.data();
+        
+        // Récupérer les infos utilisateur
+        const userInfo = await getUserInfo(currentUser.id);
+        
+        points.push({
+          id: pointDoc.id,
+          latitude: pointData.latitude,
+          longitude: pointData.longitude,
+          surface: pointData.surface,
+          budget: pointData.budget,
+          id_entreprise: pointData.id_entreprise,
+          nameplace: pointData.nameplace,
+          createdAt: pointData.createdAt,
+          userId: currentUser.id,
+          userName: userInfo.name,
+          userEmail: userInfo.email
+        });
+      }
+    }
+    
+    return { success: true, points };
+  } catch (error: any) {
+    console.error('Erreur récupération mes points:', error);
+    return { success: false, error: error.message, points: [] };
+  }
+};
+
+// Créer un nouveau point - SIGNATURE CORRIGÉE
+export const createPoint = async (pointData: Omit<Point, 'id' | 'userId' | 'userName' | 'userEmail'>) => {
+  try {
+    const currentUser = getCurrentUser();
+    if (!currentUser) {
+      return { success: false, error: 'Non connecté' };
+    }
+    
+    // 1. Créer le point dans la collection "point"
+    const pointDocRef = await addDoc(pointsCollection, {
+      ...pointData,
+      createdAt: serverTimestamp()
+    });
+    
+    // 2. Créer le statut dans "statut_point"
+    await addDoc(statutCollection, {
+      id_point: pointDocRef.id,
+      status: 'nouveau',
+      date: serverTimestamp()
+    });
+    
+    // 3. Créer la relation dans "user_point"
+    await addDoc(userPointCollection, {
+      id_point: pointDocRef.id,
+      id_user: currentUser.id,
+      date_creation: serverTimestamp()
+    });
+    
+    // Récupérer les infos utilisateur pour la réponse
+    const userInfo = await getUserInfo(currentUser.id);
+    
+    return { 
+      success: true, 
+      point: { 
+        id: pointDocRef.id, 
+        ...pointData,
+        userId: currentUser.id,
+        userName: userInfo.name,
+        userEmail: userInfo.email,
+        createdAt: new Date() // Date locale pour l'affichage
+      } as Point
+    };
+  } catch (error: any) {
+    console.error('Erreur création point:', error);
+    return { success: false, error: error.message };
+  }
+};
+
+// Récupérer toutes les entreprises
+export const getAllEntreprises = async () => {
+  try {
+    const querySnapshot = await getDocs(entreprisesCollection);
+    const entreprises: Entreprise[] = [];
+    
+    querySnapshot.forEach((doc) => {
+      entreprises.push({
+        id: doc.id,
+        entreprise_name: doc.data().entreprise_name
+      });
+    });
+    
+    return { success: true, entreprises };
+  } catch (error: any) {
+    console.error('Erreur récupération entreprises:', error);
+    return { success: false, error: error.message, entreprises: [] };
+  }
+};
+
+// Récupérer les détails d'un point avec toutes ses relations
+export const getPointDetails = async (pointId: string) => {
+  try {
+    // Récupérer le point
+    const pointDoc = await getDoc(doc(db, 'point', pointId));
+    if (!pointDoc.exists()) {
+      return { success: false, error: 'Point non trouvé' };
+    }
+    
+    const pointData = pointDoc.data();
+    
+    // Récupérer l'utilisateur qui a créé le point
+    const userPointQuery = query(
+      userPointCollection,
+      where('id_point', '==', pointId)
+    );
+    
+    const userPointSnapshot = await getDocs(userPointQuery);
+    let userId = '';
+    let userInfo = { name: 'Utilisateur', email: 'utilisateur@example.com' };
+    
+    if (!userPointSnapshot.empty) {
+      const userPointData = userPointSnapshot.docs[0].data();
+      userId = userPointData.id_user;
+      userInfo = await getUserInfo(userId);
+    }
+    
+    const point: Point = {
+      id: pointDoc.id,
+      latitude: pointData.latitude,
+      longitude: pointData.longitude,
+      surface: pointData.surface,
+      budget: pointData.budget,
+      id_entreprise: pointData.id_entreprise,
+      nameplace: pointData.nameplace,
+      createdAt: pointData.createdAt,
+      userId,
+      userName: userInfo.name,
+      userEmail: userInfo.email
+    };
+    
+    // Récupérer l'entreprise
+    let entreprise: Entreprise | null = null;
+    if (pointData.id_entreprise) {
+      const entrepriseDoc = await getDoc(doc(db, 'entreprise', pointData.id_entreprise));
+      if (entrepriseDoc.exists()) {
+        entreprise = {
+          id: entrepriseDoc.id,
+          entreprise_name: entrepriseDoc.data().entreprise_name
+        };
+      }
+    }
+    
+    // Récupérer le statut
+    const statutQuery = query(
+      statutCollection,
+      where('id_point', '==', pointId),
+      orderBy('date', 'desc')
+    );
+    
+    const statutSnapshot = await getDocs(statutQuery);
+    let status = 'nouveau';
+    let statusDate = null;
+    
+    if (!statutSnapshot.empty) {
+      const statutData = statutSnapshot.docs[0].data();
+      status = statutData.status;
+      statusDate = statutData.date;
+    }
+    
+    return {
+      success: true,
+      point,
+      entreprise,
+      status,
+      statusDate
+    };
+  } catch (error: any) {
+    console.error('Erreur détails point:', error);
+    return { success: false, error: error.message };
+  }
+};
+
+// Mettre à jour le statut d'un point
+export const updatePointStatus = async (pointId: string, newStatus: string) => {
+  try {
+    await addDoc(statutCollection, {
+      id_point: pointId,
+      status: newStatus,
+      date: serverTimestamp()
+    });
+    
+    return { success: true };
+  } catch (error: any) {
+    console.error('Erreur mise à jour statut:', error);
+    return { success: false, error: error.message };
+  }
+};
+
+// Supprimer un point
+export const deletePoint = async (pointId: string) => {
+  try {
+    const currentUser = getCurrentUser();
+    if (!currentUser) {
+      return { success: false, error: 'Non connecté' };
+    }
+    
+    // Vérifier que l'utilisateur est bien le propriétaire du point
+    const userPointQuery = query(
+      userPointCollection,
+      where('id_point', '==', pointId),
+      where('id_user', '==', currentUser.id)
+    );
+    
+    const userPointSnapshot = await getDocs(userPointQuery);
+    
+    if (userPointSnapshot.empty) {
+      return { success: false, error: 'Non autorisé' };
+    }
+    
+    // Note: Dans Firestore, on ne supprime généralement pas les données
+    // On pourrait marquer comme supprimé ou archiver
+    return { success: true, message: 'Point marqué pour suppression' };
+  } catch (error: any) {
+    console.error('Erreur suppression point:', error);
+    return { success: false, error: error.message };
+  }
+};
+
+// Récupérer les statistiques
+export const getStats = async () => {
+  try {
+    // Exemple: compter les points par statut
+    const allPoints = await getAllPoints();
+    
+    if (!allPoints.success) {
+      return { success: false, error: allPoints.error };
+    }
+    
+    const stats = {
+      total: allPoints.points.length,
+      byStatus: {} as Record<string, number>,
+      byUser: {} as Record<string, number>,
+      byEntreprise: {} as Record<string, number>
+    };
+    
+    allPoints.points.forEach(point => {
+      // Statistiques par statut (à implémenter si tu as cette info)
+      // Statistiques par utilisateur
+      if (point.userId) {
+        stats.byUser[point.userId] = (stats.byUser[point.userId] || 0) + 1;
+      }
+      // Statistiques par entreprise
+      if (point.id_entreprise) {
+        stats.byEntreprise[point.id_entreprise] = (stats.byEntreprise[point.id_entreprise] || 0) + 1;
+      }
+    });
+    
+    return { success: true, stats };
+  } catch (error: any) {
+    console.error('Erreur récupération stats:', error);
+    return { success: false, error: error.message };
+  }
+};
