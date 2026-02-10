@@ -2,6 +2,7 @@ import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import MapView from "./components/MapView";
 import Dashboard from "./pages/Dashboard";
 import GestionCompte from "./pages/GestionCompte";
+import GestionCompteBloque from "./pages/GestionCompteBloque";
 import UserEdit from "./pages/UserEdit";
 import { useState } from "react";
 
@@ -72,6 +73,10 @@ function App() {
         <Route
           path="/users/edit/:id"
           element={isLogged ? <UserEdit /> : <Navigate to="/" replace />}
+        />
+        <Route
+          path="/gestion-compte-bloque"
+          element={<GestionCompteBloque />}
         />
       </Routes>
     </BrowserRouter>

@@ -1184,7 +1184,17 @@ function MapViewLogged({ onLogout }: Props) {
                 },
                 color: "#ef4444",
                 description: "Gérer les utilisateurs"
+              },
+              {
+                icon: "👥",
+                label: "compte bloquée",
+                action: () => {
+                  window.location.href = "/gestion-compte-bloque";
+                },
+                color: "#ef4444",
+                description: "Gérer les utilisateurs bloqué"
               }
+
             ].map((item, index) => (
               <button
                 key={index}

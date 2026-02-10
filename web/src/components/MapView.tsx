@@ -686,8 +686,8 @@ function MapView({ onLoginSuccess }: Props) {
             <form onSubmit={handleLogin} style={{display:'flex',flexDirection:'column',gap:10}}>
               <input type="email" placeholder="Email" value={email} onChange={e => setEmail(e.target.value)} required style={{padding:10,borderRadius:8,border:'1px solid #e5e7eb',fontSize:15}}/>
               <input type="password" placeholder="Mot de passe" value={password} onChange={e => setPassword(e.target.value)} required style={{padding:10,borderRadius:8,border:'1px solid #e5e7eb',fontSize:15}}/>  
-              <p>Email Manager: "manager01@test.com"</p>
-              <p>Mot de passe Manager: "test123456"</p>
+              <p>Email Manager: manager01@test.com</p>
+              <p>Mot de passe Manager: test123456</p>
               <button type="submit" style={{background:'linear-gradient(90deg,#1d4ed8 60%,#60a5fa 100%)',color:'white',border:'none',borderRadius:8,padding:'10px 18px',fontWeight:700,cursor:'pointer',transition:'background 0.2s'}} onMouseOver={e=>e.currentTarget.style.background='#2563eb'} onMouseOut={e=>e.currentTarget.style.background='linear-gradient(90deg,#1d4ed8 60%,#60a5fa 100%)'}>Se connecter</button>
             </form>
             <button onClick={() => setIsLoginOpen(false)} style={{background:'#f3f4f6',color:'#374151',border:'none',borderRadius:8,padding:'10px 18px',fontWeight:600,cursor:'pointer',transition:'background 0.2s'}} onMouseOver={e=>e.currentTarget.style.background='#e5e7eb'} onMouseOut={e=>e.currentTarget.style.background='#f3f4f6'}>Fermer</button>
