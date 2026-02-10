@@ -4,6 +4,7 @@ import Dashboard from "./pages/Dashboard";
 import ImagePage from "./pages/Image";
 
 import GestionCompte from "./pages/GestionCompte";
+import GestionCompteBloque from "./pages/GestionCompteBloque";
 import UserEdit from "./pages/UserEdit";
 import { useState } from "react";
 
@@ -79,6 +80,10 @@ function App() {
         <Route
           path="/users/edit/:id"
           element={isLogged ? <UserEdit /> : <Navigate to="/" replace />}
+        />
+        <Route
+          path="/gestion-compte-bloque"
+          element={<GestionCompteBloque />}
         />
       </Routes>
     </BrowserRouter>
