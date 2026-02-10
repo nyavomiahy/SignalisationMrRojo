@@ -50,6 +50,9 @@ function App() {
         <Route
           path="/gestion-compte-bloque"
           element={<GestionCompteBloque />}
+/>
+        <Route
+        
           path="/parametre_prix"
           element={isLogged ? <ParametrePrix /> : <Navigate to="/" replace />}
         />
