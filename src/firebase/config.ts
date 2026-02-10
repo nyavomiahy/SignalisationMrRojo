@@ -54,10 +54,12 @@ export interface Point {
   longitude: number;
   surface: number;
   budget: number;
+  niveau: number;          // ✅ AJOUT
   id_entreprise: string;
   nameplace: string;
   createdAt?: Timestamp;
 }
+
 
 export interface StatutPoint {
   id: string;

@@ -1,11 +1,9 @@
 <template>
   <ion-page>
-    <!-- Header avec boutons -->
     <ion-header>
       <ion-toolbar>
         <ion-title>Signalements Routiers</ion-title>
-        
-        <!-- Boutons droite -->
+
         <ion-buttons slot="end">
           <ion-button @click="centerOnMyLocation">
             <ion-icon :icon="locate" />
@@ -20,7 +18,7 @@
 
     
     <ion-content :fullscreen="true" class="ion-no-padding">
-      <!-- Badge utilisateur -->
+
       <div v-if="currentUser" class="user-badge">
         <ion-chip color="primary">
           <ion-icon :icon="person" slot="start" />
@@ -31,10 +29,8 @@
         </ion-chip>
       </div>
 
-      <!-- Carte -->
       <div id="map-container"></div>
 
-      <!-- Filtres style Google Maps -->
       <div class="map-filters" v-if="currentUser">
         <div 
           class="filter-chip" 
@@ -55,22 +51,18 @@
         </div>
       </div>
 
-      <!-- Bouton pour ajouter un signalement -->
       <ion-fab vertical="bottom" horizontal="end" slot="fixed">
         <ion-fab-button @click="startAddReport" :disabled="!currentUser">
           <ion-icon :icon="add" />
         </ion-fab-button>
       </ion-fab>
 
-      <!-- Overlay pour fermer le panneau -->
       <div 
         class="details-overlay" 
         :class="{ visible: selectedReport !== null }"
         @click="closeDetails"
       ></div>
 
-      <!-- Panneau de détails en bas -->
-      <!-- Remplacer le volet de détails actuel par cette version -->
 <div 
   class="details-panel" 
   :class="{ open: selectedReport !== null, fullscreen: isPanelFullscreen }"
@@ -265,7 +257,7 @@
             </ion-item>
             
             <ion-item>
-              <ion-label position="stacked">Budget estimé (€)</ion-label>
+              <ion-label position="stacked">Budget estimé (Ar)</ion-label>
               <ion-input
                 v-model="newReport.budget"
                 type="number"
@@ -274,6 +266,19 @@
                 placeholder="Ex: 10000"
               />
             </ion-item>
+
+            <ion-item>
+  <ion-label position="stacked">Niveau (1 - 10)</ion-label>
+  <ion-input
+    v-model="newReport.niveau"
+    type="number"
+    min="1"
+    max="10"
+    step="1"
+    placeholder="Ex: 5"
+  />
+</ion-item>
+
             
             <ion-item>
               <ion-label>Entreprise</ion-label>
@@ -501,14 +506,12 @@ const handleDrag = (e: any) => {
   if (!isDragging.value) return;
   
   const currentY = e.type.includes('mouse') ? e.clientY : e.touches[0].clientY;
-  const deltaY = startY.value - currentY; // Négatif = vers le bas, Positif = vers le haut
-  
-  // Calculer la nouvelle hauteur
+  const deltaY = startY.value - currentY; 
   let newHeight = startHeight.value + deltaY;
   
   // Limites min et max
-  const minHeight = Math.floor(window.innerHeight * 0.3); // 30% minimum
-  const maxHeight = calculateFullHeight(); // 85% maximum
+  const minHeight = Math.floor(window.innerHeight * 0.3); 
+  const maxHeight = calculateFullHeight(); 
   
   if (newHeight < minHeight) newHeight = minHeight;
   if (newHeight > maxHeight) newHeight = maxHeight;
@@ -587,12 +590,16 @@ const isReportValid = computed(() => {
   return (
     newReport.value.surface &&
     newReport.value.budget &&
+    newReport.value.niveau &&            // ✅ AJOUT
     newReport.value.entrepriseId &&
     newReport.value.siteName &&
     parseInt(newReport.value.surface) > 0 &&
-    parseInt(newReport.value.budget) > 0
+    parseInt(newReport.value.budget) > 0 &&
+    parseInt(newReport.value.niveau) >= 1 &&   // ✅ AJOUT
+    parseInt(newReport.value.niveau) <= 10     // ✅ AJOUT
   );
 });
+
 
 const getCurrentStatus = async (pointId: string | number) => {
   try {
@@ -1087,6 +1094,7 @@ const cancelAddReport = () => {
     budget: '',
     entrepriseId: '',
     siteName: '',
+    niveau: '',
     imageFiles: [],
     imagePreviews: []
   };
@@ -1103,13 +1111,16 @@ const submitReport = async () => {
   
   try {
     const pointData = {
-      latitude: newReport.value.lat,
-      longitude: newReport.value.lng,
-      surface: parseInt(newReport.value.surface),
-      budget: parseInt(newReport.value.budget),
-      id_entreprise: newReport.value.entrepriseId,
-      nameplace: newReport.value.siteName
-    };
+  latitude: newReport.value.lat,
+  longitude: newReport.value.lng,
+  surface: parseInt(newReport.value.surface),
+  budget: parseInt(newReport.value.budget),
+  niveau: parseInt(newReport.value.niveau),   // ✅ AJOUT
+  id_entreprise: newReport.value.entrepriseId,
+  nameplace: newReport.value.siteName,
+  status: '1'
+};
+
     
     let result;
     if (newReport.value.imageFiles.length > 0) {
