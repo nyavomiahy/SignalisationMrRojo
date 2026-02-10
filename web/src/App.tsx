@@ -5,44 +5,10 @@ import ImagePage from "./pages/Image";
 
 import GestionCompte from "./pages/GestionCompte";
 import GestionCompteBloque from "./pages/GestionCompteBloque";
+import ParametrePrix from "./pages/ParametrePrix";
 import UserEdit from "./pages/UserEdit";
 import { useState } from "react";
 
-// function App() {
-//   const [isLogged, setIsLogged] = useState(false);
-
-//   return (
-//     <BrowserRouter>
-//       <Routes>
-//         <Route
-//           path="/"
-//           element={<MapView onLoginSuccess={() => setIsLogged(true)} />}
-//         />
-//         <Route
-//           path="/dashboard"
-//           element={
-//             isLogged ? (
-//               <Dashboard onLogout={() => setIsLogged(false)} />
-//             ) : (
-//               <Navigate to="/" replace />
-//             )
-//           }
-//         />
-
-//         <Route
-//           path="/gestion-compte"
-//           element={isLogged ? <GestionCompte /> : <Navigate to="/" replace />}
-//         />
-
-//         <Route
-//           path="/users/edit/:id"
-//           element={isLogged ? <UserEdit /> : <Navigate to="/" />}
-//         />
-
-//       </Routes>
-//     </BrowserRouter>
-//   );
-// }
 
 function App() {
   // On récupère l'état depuis le localStorage si disponible
@@ -84,6 +50,8 @@ function App() {
         <Route
           path="/gestion-compte-bloque"
           element={<GestionCompteBloque />}
+          path="/parametre_prix"
+          element={isLogged ? <ParametrePrix /> : <Navigate to="/" replace />}
         />
       </Routes>
     </BrowserRouter>

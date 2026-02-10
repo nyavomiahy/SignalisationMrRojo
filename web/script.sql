@@ -101,10 +101,8 @@ ALTER TABLE users
 ADD COLUMN sync_id UUID UNIQUE DEFAULT gen_random_uuid(),
 ADD COLUMN updated_at TIMESTAMP DEFAULT NOW();
 
-
 ALTER TABLE points 
-ADD COLUMN niveau INT DEFAULT 0 CHECK (niveau BETWEEN 1 AND 10);
-
+ADD COLUMN niveau INT CHECK (niveau BETWEEN 1 AND 10);
 -- Correction de la dernière ligne problématique
 -- Supprime les doublons de 'Manager' (si besoin, mais dans vos données c'est 'manager' en minuscule)
 DELETE FROM type_account
@@ -118,3 +116,15 @@ WHERE LOWER(name_type) = 'manager'
 INSERT INTO status_users(id_user, status, description, daty) VALUES
 (1, 1, 'actif', '2024-01-01'),
 (2, 1, 'actif', '2024-01-01');
+(1, 2, 'bloqué', '2024-01-01'),
+(2, 1, 'actif', '2024-01-01');
+
+INSERT INTO prix (prix, date) VALUES
+(1000, '2026-01-01');
+
+INSERT INTO prix (prix, date) VALUES
+(500, '2024-01-01');
+
+-- UPDATE points
+-- SET niveau = 1
+-- WHERE id_points = 37;

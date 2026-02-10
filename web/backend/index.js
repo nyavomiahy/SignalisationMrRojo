@@ -22,17 +22,13 @@ app.use("/api/status_point", statusRouter);
 const typeAccountRouter = require("./routes/type_account");
 app.use("/api/type_account", typeAccountRouter);
 
-//app.use("/api/sync", require("./routes/sync"));
-
-// const usersRoutes = require("./routes/users");
-// console.log("usersRoutes loaded", usersRoutes);
-// app.use("/api/users", usersRoutes);
-
 const usersRoutes = require("./routes/users");
 app.use("/api/users", usersRoutes);
 
 const usersStatusRoutes = require("./routes/users_status");
 app.use("/api/users-status", usersStatusRoutes);
+const prixRouter = require("./routes/prix");
+app.use("/api/prix", prixRouter);
 
 const ff = require("./routes/firebase-firestore");
 app.use("/api/firestore-to-postgres", ff);

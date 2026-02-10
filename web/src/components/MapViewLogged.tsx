@@ -382,7 +382,7 @@ function MapViewLogged({ onLogout }: Props) {
                 </div>
                 <div>
                   <div style={{ fontSize: "12px", color: "#cbd5e1", marginBottom: "4px" }}>Budget total</div>
-                  <div style={{ fontSize: "20px", fontWeight: 700, color: "white" }}>{recap.totalBudget.toLocaleString()} Ar</div>
+                  <div style={{ fontSize: "20px", fontWeight: 700, color: "white" }}>{(recap.totalBudget ?? 0).toLocaleString()} Ar</div>
                 </div>
               </div>
             </div>
@@ -441,7 +441,14 @@ function MapViewLogged({ onLogout }: Props) {
                 action: () => navigate("/gestion-compte-bloque"),
                 color: "#ef4444",
                 description: "Gérer les utilisateurs bloqués"
-              }
+              },
+              { 
+                icon: "⚙️",  
+                label: "parametre prix", 
+                action: () => navigate("/parametre_prix"), // <-- OK, utilise navigate ici
+                color: "#ef4444",
+                description: "modification des prix et ajout de nouvelle prix"
+              },
             ].map((item, index) => (
               <button
                 key={index}
