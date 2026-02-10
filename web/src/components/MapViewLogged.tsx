@@ -642,7 +642,7 @@ function MapViewLogged({ onLogout }: Props) {
                       </div>
                       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                         <span style={{ color: "#64748b", fontSize: "14px", fontWeight: 500 }}>Budget :</span>
-                        <span style={{ color: "#1e293b", fontSize: "14px", fontWeight: 600 }}>{p.budget.toLocaleString()} Ariary</span>
+                        <span style={{ color: "#1e293b", fontSize: "14px", fontWeight: 600 }}>{(p.budget ?? 0).toLocaleString()} Ariary</span>
                       </div>
                       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                         <span style={{ color: "#64748b", fontSize: "14px", fontWeight: 500 }}>Entreprise :</span>
@@ -968,14 +968,14 @@ function MapViewLogged({ onLogout }: Props) {
                   e.currentTarget.style.transform = "translateY(0)";
                 }}
               >
-                Valider
+                Valider+
               </button>
             </div>
           </div>
         </div>
       )}
 
-      {/* Modale inscription (reste identique) */}
+       {/* Modale inscription */}
       {showRegister && (
         <div
           style={{
@@ -990,9 +990,279 @@ function MapViewLogged({ onLogout }: Props) {
             animation: "fadeIn 0.3s ease-out",
           }}
         >
-          {/* ... (le reste du modal inscription reste inchangé) ... */}
+          <div
+            style={{
+              background: "linear-gradient(145deg, #ffffff 0%, #f8fafc 100%)",
+              padding: "48px 40px",
+              borderRadius: "28px",
+              width: "460px",
+              maxWidth: "90vw",
+              boxShadow: "0 25px 50px -12px rgba(0, 0, 0, 0.25)",
+              border: "1px solid rgba(255, 255, 255, 0.2)",
+              position: "relative",
+              animation: "slideUp 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275)",
+            }}
+          >
+            <div style={{
+              position: "absolute",
+              top: 0,
+              left: 0,
+              right: 0,
+              height: "6px",
+              background: "linear-gradient(90deg, #8b5cf6 0%, #3b82f6 50%, #10b981 100%)",
+              borderTopLeftRadius: "28px",
+              borderTopRightRadius: "28px",
+            }} />
+            
+            <div style={{ textAlign: "center", marginBottom: "36px" }}>
+              <div style={{
+                width: "80px",
+                height: "80px",
+                background: "linear-gradient(135deg, #8b5cf6 0%, #3b82f6 100%)",
+                borderRadius: "50%",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                margin: "0 auto 20px",
+                boxShadow: "0 10px 25px rgba(139, 92, 246, 0.3)",
+              }}>
+                <span style={{ fontSize: "38px", color: "white" }}>👤</span>
+              </div>
+              <h2 style={{
+                fontSize: "32px",
+                fontWeight: 800,
+                background: "linear-gradient(135deg, #8b5cf6 0%, #3b82f6 100%)",
+                WebkitBackgroundClip: "text",
+                WebkitTextFillColor: "transparent",
+                backgroundClip: "text",
+                marginBottom: "8px",
+              }}>
+                Créer un compte
+              </h2>
+              <p style={{
+                color: "#64748b",
+                fontSize: "15px",
+                fontWeight: 500,
+                lineHeight: 1.6,
+              }}>
+                Rejoignez-nous et accédez à toutes les fonctionnalités
+              </p>
+            </div>
+
+            <div style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
+              <div style={{ position: "relative" }}>
+                <div style={{
+                  position: "absolute",
+                  left: "18px",
+                  top: "50%",
+                  transform: "translateY(-50%)",
+                  color: "#8b5cf6",
+                  fontSize: "20px",
+                }}>👤</div>
+                <input
+                  placeholder="Nom d'utilisateur"
+                  value={form.username}
+                  onChange={(e) => setForm({ ...form, username: e.target.value })}
+                  style={{
+                    width: "100%",
+                    padding: "18px 20px 18px 55px",
+                    border: "2px solid #e2e8f0",
+                    borderRadius: "14px",
+                    fontSize: "16px",
+                    fontWeight: 500,
+                    color: "#1e293b",
+                    background: "#ffffff",
+                    transition: "all 0.3s",
+                    boxSizing: "border-box",
+                  }}
+                  onFocus={(e) => {
+                    e.target.style.borderColor = "#8b5cf6";
+                    e.target.style.boxShadow = "0 0 0 3px rgba(139, 92, 246, 0.15)";
+                  }}
+                  onBlur={(e) => {
+                    e.target.style.borderColor = "#e2e8f0";
+                    e.target.style.boxShadow = "none";
+                  }}
+                />
+              </div>
+
+              <div style={{ position: "relative" }}>
+                <div style={{
+                  position: "absolute",
+                  left: "18px",
+                  top: "50%",
+                  transform: "translateY(-50%)",
+                  color: "#8b5cf6",
+                  fontSize: "20px",
+                }}>✉</div>
+                <input
+                  placeholder="Email"
+                  value={form.email}
+                  onChange={(e) => setForm({ ...form, email: e.target.value })}
+                  style={{
+                    width: "100%",
+                    padding: "18px 20px 18px 55px",
+                    border: "2px solid #e2e8f0",
+                    borderRadius: "14px",
+                    fontSize: "16px",
+                    fontWeight: 500,
+                    color: "#1e293b",
+                    background: "#ffffff",
+                    transition: "all 0.3s",
+                    boxSizing: "border-box",
+                  }}
+                  onFocus={(e) => {
+                    e.target.style.borderColor = "#8b5cf6";
+                    e.target.style.boxShadow = "0 0 0 3px rgba(139, 92, 246, 0.15)";
+                  }}
+                  onBlur={(e) => {
+                    e.target.style.borderColor = "#e2e8f0";
+                    e.target.style.boxShadow = "none";
+                  }}
+                />
+              </div>
+
+              <div style={{ position: "relative" }}>
+                <div style={{
+                  position: "absolute",
+                  left: "18px",
+                  top: "50%",
+                  transform: "translateY(-50%)",
+                  color: "#8b5cf6",
+                  fontSize: "20px",
+                }}>🔒</div>
+                <input
+                  type="password"
+                  placeholder="Mot de passe"
+                  value={form.password}
+                  onChange={(e) => setForm({ ...form, password: e.target.value })}
+                  style={{
+                    width: "100%",
+                    padding: "18px 20px 18px 55px",
+                    border: "2px solid #e2e8f0",
+                    borderRadius: "14px",
+                    fontSize: "16px",
+                    fontWeight: 500,
+                    color: "#1e293b",
+                    background: "#ffffff",
+                    transition: "all 0.3s",
+                    boxSizing: "border-box",
+                  }}
+                  onFocus={(e) => {
+                    e.target.style.borderColor = "#8b5cf6";
+                    e.target.style.boxShadow = "0 0 0 3px rgba(139, 92, 246, 0.15)";
+                  }}
+                  onBlur={(e) => {
+                    e.target.style.borderColor = "#e2e8f0";
+                    e.target.style.boxShadow = "none";
+                  }}
+                />
+              </div>
+
+              <div style={{ position: "relative" }}>
+                <div style={{
+                  position: "absolute",
+                  left: "18px",
+                  top: "50%",
+                  transform: "translateY(-50%)",
+                  color: "#8b5cf6",
+                  fontSize: "20px",
+                  zIndex: 2,
+                }}>🏷</div>
+                <select
+                  value={form.id_type_account}
+                  onChange={(e) => setForm({ ...form, id_type_account: e.target.value })}
+                  style={{
+                    width: "100%",
+                    padding: "18px 20px 18px 55px",
+                    border: "2px solid #e2e8f0",
+                    borderRadius: "14px",
+                    fontSize: "16px",
+                    fontWeight: 500,
+                    color: "#1e293b",
+                    background: "#ffffff",
+                    transition: "all 0.3s",
+                    boxSizing: "border-box",
+                    appearance: "none",
+                    backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='20' height='20' viewBox='0 0 24 24' fill='none' stroke='%238b5cf6' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E")`,
+                    backgroundRepeat: "no-repeat",
+                    backgroundPosition: "right 20px center",
+                    backgroundSize: "20px",
+                    paddingRight: "55px",
+                  }}
+                  onFocus={(e) => {
+                    e.target.style.borderColor = "#8b5cf6";
+                    e.target.style.boxShadow = "0 0 0 3px rgba(139, 92, 246, 0.15)";
+                  }}
+                  onBlur={(e) => {
+                    e.target.style.borderColor = "#e2e8f0";
+                    e.target.style.boxShadow = "none";
+                  }}
+                >
+                  <option value="">-- Sélectionnez un type de compte --</option>
+                  {typesAccount.map((t) => (
+                    <option key={t.id_type_account} value={t.id_type_account}>
+                      {t.name_type}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            </div>
+
+            <div style={{
+              display: "flex",
+              justifyContent: "space-between",
+              marginTop: "36px",
+              gap: "16px",
+            }}>
+              <button
+                onClick={() => setShowRegister(false)}
+                style={{
+                  padding: "18px 32px",
+                  background: "#f1f5f9",
+                  color: "#475569",
+                  border: "2px solid #e2e8f0",
+                  borderRadius: "14px",
+                  fontWeight: 700,
+                  fontSize: "16px",
+                  cursor: "pointer",
+                  transition: "all 0.3s",
+                  flex: 1,
+                  textAlign: "center",
+                  letterSpacing: "0.5px",
+                }}
+                onMouseOver={e => e.currentTarget.style.background = "#e2e8f0"}
+                onMouseOut={e => e.currentTarget.style.background = "#f1f5f9"}
+              >
+                Annuler
+              </button>
+              <button
+                onClick={handleRegister}
+                style={{
+                  padding: "18px 32px",
+                  background: "linear-gradient(135deg, #10b981 0%, #059669 100%)",
+                  color: "white",
+                  border: "none",
+                  borderRadius: "14px",
+                  fontWeight: 700,
+                  fontSize: "16px",
+                  cursor: "pointer",
+                  transition: "all 0.3s",
+                  flex: 1,
+                  textAlign: "center",
+                  letterSpacing: "0.5px",
+                  boxShadow: "0 8px 20px rgba(16, 185, 129, 0.3)",
+                }}
+                onMouseOver={e => e.currentTarget.style.background = "linear-gradient(135deg, #059669 0%, #047857 100%)"}
+                onMouseOut={e => e.currentTarget.style.background = "linear-gradient(135deg, #10b981 0%, #059669 100%)"}
+              >
+                Créer le compte
+              </button>
+            </div>
+          </div>
         </div>
       )}
+
 
       {/* Styles CSS */}
       <style>
