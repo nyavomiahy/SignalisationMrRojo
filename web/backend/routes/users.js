@@ -2,9 +2,6 @@ const express = require("express");
 const router = express.Router();
 const pool = require("../db");
 
-/* =========================
-   GET : liste des utilisateurs
-   ========================= */
 router.get("/", async (req, res) => {
   try {
     const result = await pool.query(`
@@ -26,14 +23,10 @@ router.get("/", async (req, res) => {
 });
 
 
-/* =========================
-   DELETE : supprimer un utilisateur
-   ========================= */
 router.delete("/:id", async (req, res) => {
   try {
     const { id } = req.params;
 
-    // Sécurité : éviter suppression admin si besoin
     await pool.query("DELETE FROM users WHERE id = $1", [id]);
 
     res.json({ message: "Utilisateur supprimé" });
@@ -43,9 +36,6 @@ router.delete("/:id", async (req, res) => {
   }
 });
 
-/* =========================
-   PUT : modifier un utilisateur
-   ========================= */
 router.put("/:id", async (req, res) => {
   try {
     const { id } = req.params;

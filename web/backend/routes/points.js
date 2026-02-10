@@ -4,29 +4,6 @@ const pool = require("../db");
 
 // GET points
 
-// router.get("/", async (req, res) => {
-//     try {
-//       const result = await pool.query(`
-//         SELECT p.id_point, p.latitude, p.longitude, p.surface, p.budget, p.nameplace, e.name_entreprise,
-//                sp.status, sp.daty
-//         FROM points p
-//         LEFT JOIN entreprise e ON e.id_entreprise = p.id_entreprise
-//         LEFT JOIN LATERAL (
-//             SELECT status, daty
-//             FROM status_point
-//             WHERE id_point = p.id_point
-//             ORDER BY daty DESC, id_status_point DESC
-//             LIMIT 1
-//         ) sp ON true
-//       `);
-  
-//       res.json(result.rows);
-//     } catch (err) {
-//       console.error(err);
-//       res.status(500).json({ error: "Erreur serveur" });
-//     }
-//   });
-    
 router.get("/", async (req, res) => {
   try {
     const result = await pool.query(`
