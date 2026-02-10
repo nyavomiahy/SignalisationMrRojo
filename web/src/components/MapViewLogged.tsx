@@ -222,16 +222,17 @@ function MapViewLogged({ onLogout }: Props) {
     }
   };
 
-  const handleSync = async () => {
+const handleSync = async () => {
     try {
-      const apis = [
-        { 
-          name: "Synchro photo", url: "http://localhost:5000/api/firestore-to-postgres/photo_synchro" 
-        }
+       const apis = [
+      { name: "Utilisateurs", url: "http://localhost:5000/api/firestore-to-postgres/postgres-to-firebase-users" },
+      { name: "postgres -> firebase", url: "http://localhost:5000/api/firestore-to-postgres/postgres-to-firebase" },
+      { name: "Firebase → PostgreSQL", url: "http://localhost:5000/api/firestore-to-postgres/" },
+        { name: "Synchro photo", url: "http://localhost:5000/api/firestore-to-postgres/photo_synchro" }
       ];
-
+  
       const results = [];
-
+  
       for (const api of apis) {
         try {
           alert(`Début de la synchronisation ${api.name}... Attendez environ 2 minutes ⏳`);
@@ -243,19 +244,18 @@ function MapViewLogged({ onLogout }: Props) {
           console.error(`❌ ${api.name} échoué:`, error.message);
         }
       }
-
+  
       const successfulCount = results.filter(r => r.success).length;
-      alert(`Synchronisation terminée!\n\nSuccès: ${successfulCount}/1\nÉchecs: ${1 - successfulCount}`);
-
+      alert(`Synchronisation terminée!\n\nSuccès: ${successfulCount}/3\nÉchecs: ${3 - successfulCount}`);
+  
       fetchPoints();
       fetchStatus();
-
+  
     } catch (err: any) {
       alert("Erreur de synchronisation ❌");
       console.error(err);
     }
   };
-
   if (!position) return <p>Localisation en cours...</p>;
 
   /* ================= RENDER ================= */
