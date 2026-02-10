@@ -321,30 +321,74 @@ function MapView({ onLoginSuccess }: Props) {
           <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
 
           {pointsWithStatus.map((p) => (
-            <Marker key={p.id_point} position={[parseFloat(p.latitude), parseFloat(p.longitude)]}>
-              <Popup>
-                <div style={{fontSize:14, minWidth:180, color:'#222'}}>
-                  <b style={{color:'#2563eb'}}>{p.nameplace}</b><br/>
-                  <span>Surface: <b>{p.surface} m²</b></span><br/>
-                  <span>Budget: <b>{p.budget} Ariary</b></span><br/>
-                  <span>Entreprise: <b>{p.name_entreprise}</b></span><br/>
-                  <span>Status: <b>{getStatusOfPoint(p.status)}</b></span><br/>
-                  <Link 
-                    to={`/image/${p.id_point}`} 
-                    style={{
-                      color: "#2563eb",
-                      textDecoration: "underline",
-                      fontWeight: 600,
-                      marginTop: 8,
-                      display: "inline-block",
-                    }}
-                  >
-                    Voir la photo
-                  </Link>
-                </div>
-              </Popup>
-            </Marker>
-          ))}
+  <Marker key={p.id_point} position={[parseFloat(p.latitude), parseFloat(p.longitude)]}>
+    <Popup>
+      <div style={{fontSize:14, minWidth:200}}>
+        {/* Titre */}
+        <div style={{marginBottom:12}}>
+          <div style={{
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            marginBottom: 8
+          }}>
+            <b style={{color:'#1e40af', fontSize:15}}>{p.nameplace}</b>
+            <span style={{
+              padding: '2px 8px',
+              borderRadius: 10,
+              fontSize: 10,
+              fontWeight: 600,
+              backgroundColor: 
+                p.status === '1' ? '#10b981' :
+                p.status === '2' ? '#3b82f6' :
+                p.status === '3' ? '#ef4444' :
+                p.status === '4' ? '#8b5cf6' : '#6b7280',
+              color: 'white'
+            }}>
+              {getStatusOfPoint(p.status)}
+            </span>
+          </div>
+        </div>
+
+        {/* Informations */}
+        <div style={{marginBottom:15}}>
+          <div style={{marginBottom:8, paddingBottom:8, borderBottom:'1px solid #e5e7eb'}}>
+            <div style={{color:'#6b7280', fontSize:12, marginBottom:2}}>Surface</div>
+            <b>{p.surface} m²</b>
+          </div>
+          
+          <div style={{marginBottom:8, paddingBottom:8, borderBottom:'1px solid #e5e7eb'}}>
+            <div style={{color:'#6b7280', fontSize:12, marginBottom:2}}>Budget</div>
+            <b>{new Intl.NumberFormat('fr-FR').format(p.budget)} Ariary</b>
+          </div>
+          
+          <div style={{marginBottom:8}}>
+            <div style={{color:'#6b7280', fontSize:12, marginBottom:2}}>Entreprise</div>
+            <b>{p.name_entreprise}</b>
+          </div>
+        </div>
+
+        {/* Bouton */}
+        <Link 
+          to={`/image/${p.id_point}`}
+          style={{
+            display: 'block',
+            textAlign: 'center',
+            padding: '8px',
+            backgroundColor: '#3b82f6',
+            color: 'white',
+            textDecoration: 'none',
+            borderRadius: 6,
+            fontWeight: 600,
+            fontSize: 13
+          }}
+        >
+          📷 Voir la photo
+        </Link>
+      </div>
+    </Popup>
+  </Marker>
+))}
         </MapContainer>
       </div>
 
