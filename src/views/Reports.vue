@@ -143,6 +143,9 @@ import { ref, computed, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
 import { getAllPoints, getMyPoints } from '@/services/pointService';
 import { getCurrentUserFromStorage } from '@/services/userService';
+import { db, collections, StatusPoint, StatutPoint } from '@/firebase/config';
+import { collection, query, where, orderBy, getDocs } from 'firebase/firestore';
+
 
 const router = useRouter();
 
@@ -158,51 +161,118 @@ const entreprises = ref<Array<{id: string, name: string}>>([
   { id: '4', name: 'Municipalité' }
 ]);
 
+const getCurrentStatus = async (pointId: string | number) => {
+  try {
+
+    /* ========= STATUS_POINT (NEW STRUCTURE) ========= */
+    const statusQ = query(
+      collections.status_point,
+      where("id_point", "==", Number(pointId))
+    );
+
+    const statusSnap = await getDocs(statusQ);
+
+    if (!statusSnap.empty) {
+      const sorted = statusSnap.docs
+        .map(d => d.data())
+        .sort(
+          (a: any, b: any) =>
+            getDateValue(b.updated_at || b.created_at).getTime() -
+            getDateValue(a.updated_at || a.created_at).getTime()
+        );
+
+      return sorted[0].status;
+    }
+
+    /* ========= STATUT_POINT (OLD STRUCTURE) ========= */
+    const statutQ = query(
+      collections.statut_point,
+      where("id_point", "==", String(pointId))
+    );
+
+    const statutSnap = await getDocs(statutQ);
+
+    if (!statutSnap.empty) {
+      const sorted = statutSnap.docs
+        .map(d => d.data())
+        .sort(
+          (a: any, b: any) =>
+            getDateValue(b.date).getTime() -
+            getDateValue(a.date).getTime()
+        );
+
+      return sorted[0].status;
+    }
+
+    return "1";
+
+  } catch (e) {
+    console.error("Erreur status:", e);
+    return "1";
+  }
+};
+
+
 const loadReports = async () => {
   try {
+
     currentUser.value = getCurrentUserFromStorage();
-    
+
     let result;
-    if (currentFilter.value === 'mine' && currentUser.value) {
+    if (currentFilter.value === "mine" && currentUser.value) {
       result = await getMyPoints();
     } else {
       result = await getAllPoints();
     }
-    
-    if (result.success && result.points) {
-      reports.value = result.points.map((point: any, index: number) => {
+
+    if (!result?.success || !result?.points) return;
+
+    const enriched = await Promise.all(
+      result.points.map(async (point: any, index: number) => {
+
+        const status = await getCurrentStatus(point.id || point.id_point);
+
         const userId = currentUser.value?.uid || currentUser.value?.id;
         const isMine = userId && point.userId === userId;
 
-        // Convertir latitude et longitude en nombre
         const lat = Number(point.latitude || point.lat || 0);
         const lng = Number(point.longitude || point.lng || 0);
 
         return {
           ...point,
+          status: String(status),
           id: point.id || `point-${index}`,
           siteName: point.nameplace || point.siteName,
-          locationName: point.locationName || getDefaultLocation({ latitude: lat, longitude: lng }),
+          locationName:
+            point.locationName ||
+            getDefaultLocation({ latitude: lat, longitude: lng }),
           isMine,
           latitude: lat,
           longitude: lng
         };
-      });
+      })
+    );
 
-      reports.value.sort((a, b) => getDateValue(b.createdAt).getTime() - getDateValue(a.createdAt).getTime());
-    }
-  } catch (error: any) {
-    console.error('❌ Erreur chargement signalements:', error);
+    reports.value = enriched.sort(
+      (a, b) =>
+        getDateValue(b.createdAt).getTime() -
+        getDateValue(a.createdAt).getTime()
+    );
+
+  } catch (error) {
+    console.error("❌ loadReports:", error);
   }
 };
 
 const getDateValue = (date: any): Date => {
+  if (!date) return new Date(0);
   if (date?.toDate) return date.toDate();
   if (date instanceof Date) return date;
-  if (typeof date === 'string' || typeof date === 'number') return new Date(date);
+  if (typeof date === "string" || typeof date === "number") return new Date(date);
   if (date?.seconds) return new Date(date.seconds * 1000);
   return new Date(0);
 };
+
 
 const formatLocation = (report: any) => {
   if (report.locationName) return report.locationName;
@@ -215,9 +285,14 @@ const formatLocation = (report: any) => {
 const getDefaultLocation = (point: any) => {
   const lat = Number(point.latitude);
   const lng = Number(point.longitude);
-  if (!isNaN(lat) && !isNaN(lng)) return `Position (${lat.toFixed(4)}, ${lng.toFixed(4)})`;
-  return 'Localisation inconnue';
+
+  if (!isNaN(lat) && !isNaN(lng)) {
+    return `Position (${lat.toFixed(4)}, ${lng.toFixed(4)})`;
+  }
+
+  return "Localisation inconnue";
 };
+
 
 const filteredReports = computed(() => {
   let filtered = reports.value;

@@ -594,6 +594,66 @@ const isReportValid = computed(() => {
   );
 });
 
+const getCurrentStatus = async (pointId: string | number) => {
+  try {
+
+    // NEW STRUCTURE
+    const statusQ = query(
+      collections.status_point,
+      where("id_point", "==", Number(pointId))
+    );
+
+    const statusSnap = await getDocs(statusQ);
+
+    if (!statusSnap.empty) {
+      const sorted = statusSnap.docs
+        .map(d => d.data())
+        .sort(
+          (a: any, b: any) =>
+            getDateValue(b.updated_at || b.created_at).getTime() -
+            getDateValue(a.updated_at || a.created_at).getTime()
+        );
+
+      return sorted[0].status;
+    }
+
+    // OLD STRUCTURE
+    const statutQ = query(
+      collections.statut_point,
+      where("id_point", "==", String(pointId))
+    );
+
+    const statutSnap = await getDocs(statutQ);
+
+    if (!statutSnap.empty) {
+      const sorted = statutSnap.docs
+        .map(d => d.data())
+        .sort(
+          (a: any, b: any) =>
+            getDateValue(b.date).getTime() -
+            getDateValue(a.date).getTime()
+        );
+
+      return sorted[0].status;
+    }
+
+    return "1";
+
+  } catch (e) {
+    console.error("Erreur status:", e);
+    return "1";
+  }
+};
+
+const getDateValue = (date: any): Date => {
+  if (!date) return new Date(0);
+  if (date?.toDate) return date.toDate();
+  if (date instanceof Date) return date;
+  if (typeof date === "string" || typeof date === "number") return new Date(date);
+  if (date?.seconds) return new Date(date.seconds * 1000);
+  return new Date(0);
+};
+
 
 const getStatusClass = (status: string) => {
   switch (status) {
@@ -759,7 +819,6 @@ const initMap = async () => {
   loadPoints();
 };
 
-// Récupérer les images d'un point
 async function getImagesForPoint(pointId: string): Promise<string[]> {
   const q = query(collections.image_point, where('id_point', '==', pointId));
   const snap = await getDocs(q);
@@ -775,8 +834,7 @@ async function getImagesForPoint(pointId: string): Promise<string[]> {
 
 const addMarkerToMap = async (point: any, isMine: boolean = false) => {
   if (!map) return;
-  
-  // S'assurer que les coordonnées sont des nombres
+
   const lat = parseFloat(point.latitude) || 0;
   const lng = parseFloat(point.longitude) || 0;
   
@@ -793,12 +851,9 @@ const addMarkerToMap = async (point: any, isMine: boolean = false) => {
   const marker = L.marker([lat, lng], {
     icon: createPinEmojiMarker(point.status, isMine)
   }).addTo(map);
-  
-  // CORRECTION ICI : Trouver l'entreprise en comparant les IDs comme des strings
   let entrepriseName = 'Inconnue';
   
   if (point.id_entreprise) {
-    // Essayer de trouver l'entreprise avec différentes méthodes de comparaison
     const entrepriseIdStr = String(point.id_entreprise);
     
     // Chercher par ID string
@@ -921,71 +976,63 @@ const addMarkerToMap = async (point: any, isMine: boolean = false) => {
   });
 };
 
-// Charger les points
 const loadPoints = async () => {
-  console.log('🚀 Chargement points avec filtres:', {
-    showOnlyMyPoints: showOnlyMyPoints.value,
-    currentUser: currentUser.value ? {
-      id: currentUser.value.id,
-      uid: currentUser.value.uid,
-      email: currentUser.value.email
-    } : 'Non connecté'
-  });
-  
   try {
+
     let result;
-    
+
     if (showOnlyMyPoints.value && currentUser.value) {
-      console.log('🔍 Chargement de MES signalements...');
       result = await getMyPoints();
-      
+
       if (result.success && result.points) {
         const userId = currentUser.value?.uid || currentUser.value?.id;
-        result.points = result.points.filter((point: any) => {
-          return point.userId === userId;
-        });
+        result.points = result.points.filter((p: any) => p.userId === userId);
       }
+
     } else {
-      console.log('🔍 Chargement de TOUS les signalements...');
       result = await getAllPoints();
     }
-    
-    if (result.success && result.points) {
-      console.log('✅ Points chargés:', result.points);
-      
-      // Nettoyer la carte
-      if (map) {
-        map.eachLayer((layer: any) => {
-          if (layer instanceof L.Marker && layer !== clickMarker) {
-            map.removeLayer(layer);
-          }
-        });
-      }
-      
-      // Ajouter les marqueurs
-      result.points.forEach((point: any) => {
-        const userId = currentUser.value?.uid || currentUser.value?.uid;
-        const isMine = point.userId === userId;
-        addMarkerToMap(point, isMine);
+
+    if (!result?.success || !result?.points) return;
+
+    /* ========= ENRICHIR AVEC STATUS ========= */
+    const enriched = await Promise.all(
+      result.points.map(async (point: any) => {
+
+        const status = await getCurrentStatus(point.id || point.id_point);
+
+        return {
+          ...point,
+          status: String(status)
+        };
+      })
+    );
+
+    enriched.sort(
+      (a: any, b: any) =>
+        getDateValue(b.createdAt).getTime() -
+        getDateValue(a.createdAt).getTime()
+    );
+
+    if (map) {
+      map.eachLayer((layer: any) => {
+        if (layer instanceof L.Marker && layer !== clickMarker) {
+          map.removeLayer(layer);
+        }
       });
-      
-      console.log(`📍 ${result.points.length} points ajoutés à la carte`);
-      
-      if (result.points.length === 0) {
-        const message = showOnlyMyPoints.value 
-          ? 'Vous n\'avez pas encore créé de signalements'
-          : 'Aucun signalement à afficher';
-        showToast(message, 'warning', 2000);
-      }
-    } else {
-      console.error('❌ Erreur chargement points:', result.error);
-      showToast(result.error || 'Erreur lors du chargement', 'danger');
     }
-  } catch (error: any) {
-    console.error('❌ Erreur chargement points:', error);
-    showToast('Erreur lors du chargement des points', 'danger');
+
+    enriched.forEach((point: any) => {
+      const userId = currentUser.value?.uid || currentUser.value?.id;
+      const isMine = point.userId === userId;
+      addMarkerToMap(point, isMine);
+    });
+
+  } catch (error) {
+    console.error("❌ loadPoints:", error);
   }
 };
+
 
 const getLocationName = async (lat: number, lng: number): Promise<string> => {
   try {
