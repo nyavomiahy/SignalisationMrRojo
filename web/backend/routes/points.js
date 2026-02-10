@@ -4,29 +4,78 @@ const pool = require("../db");
 
 // GET points
 
+// router.get("/", async (req, res) => {
+//     try {
+//       const result = await pool.query(`
+//         SELECT p.id_point, p.latitude, p.longitude, p.surface, p.budget, p.nameplace, e.name_entreprise,
+//                sp.status, sp.daty
+//         FROM points p
+//         LEFT JOIN entreprise e ON e.id_entreprise = p.id_entreprise
+//         LEFT JOIN LATERAL (
+//             SELECT status, daty
+//             FROM status_point
+//             WHERE id_point = p.id_point
+//             ORDER BY daty DESC, id_status_point DESC
+//             LIMIT 1
+//         ) sp ON true
+//       `);
+  
+//       res.json(result.rows);
+//     } catch (err) {
+//       console.error(err);
+//       res.status(500).json({ error: "Erreur serveur" });
+//     }
+//   });
+    
 router.get("/", async (req, res) => {
-    try {
-      const result = await pool.query(`
-        SELECT p.id_point, p.latitude, p.longitude, p.surface, p.budget, p.nameplace, e.name_entreprise,
-               sp.status, sp.daty
-        FROM points p
-        LEFT JOIN entreprise e ON e.id_entreprise = p.id_entreprise
-        LEFT JOIN LATERAL (
-            SELECT status, daty
-            FROM status_point
-            WHERE id_point = p.id_point
-            ORDER BY daty DESC, id_status_point DESC
-            LIMIT 1
-        ) sp ON true
-      `);
-  
-      res.json(result.rows);
-    } catch (err) {
-      console.error(err);
-      res.status(500).json({ error: "Erreur serveur" });
-    }
-  });
-  
+  try {
+    const result = await pool.query(`
+      SELECT 
+        p.id_point,
+        p.latitude,
+        p.longitude,
+        p.surface,
+        p.niveau,
+        p.nameplace,
+        e.name_entreprise,
+        sp_latest.status AS dernier_status,
+        sp_latest.daty AS date_dernier_status,
+        sp_first.daty AS date_creation,
+        -- calcul budget à la volée avec prix correspondant à la date de création
+        p.surface * p.niveau * (
+          SELECT prix
+          FROM prix
+          WHERE date <= sp_first.daty
+          ORDER BY date DESC, id_prix DESC
+          LIMIT 1
+        ) AS budget
+      FROM points p
+      LEFT JOIN entreprise e ON e.id_entreprise = p.id_entreprise
+      -- dernier status
+      LEFT JOIN LATERAL (
+          SELECT status, daty
+          FROM status_point
+          WHERE id_point = p.id_point
+          ORDER BY daty DESC, id_status_point DESC
+          LIMIT 1
+      ) sp_latest ON true
+      -- premier status pour date de création
+      LEFT JOIN LATERAL (
+          SELECT daty
+          FROM status_point
+          WHERE id_point = p.id_point
+          ORDER BY daty ASC, id_status_point ASC
+          LIMIT 1
+      ) sp_first ON true
+    `);
+
+    res.json(result.rows);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Erreur serveur" });
+  }
+});
+
 
 // DELETE point
 router.delete("/:id_point", async (req, res) => {
