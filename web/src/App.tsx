@@ -3,10 +3,61 @@ import MapView from "./components/MapView";
 import Dashboard from "./pages/Dashboard";
 import ImagePage from "./pages/Image";
 
+import GestionCompte from "./pages/GestionCompte";
+import UserEdit from "./pages/UserEdit";
 import { useState } from "react";
 
+// function App() {
+//   const [isLogged, setIsLogged] = useState(false);
+
+//   return (
+//     <BrowserRouter>
+//       <Routes>
+//         <Route
+//           path="/"
+//           element={<MapView onLoginSuccess={() => setIsLogged(true)} />}
+//         />
+//         <Route
+//           path="/dashboard"
+//           element={
+//             isLogged ? (
+//               <Dashboard onLogout={() => setIsLogged(false)} />
+//             ) : (
+//               <Navigate to="/" replace />
+//             )
+//           }
+//         />
+
+//         <Route
+//           path="/gestion-compte"
+//           element={isLogged ? <GestionCompte /> : <Navigate to="/" replace />}
+//         />
+
+//         <Route
+//           path="/users/edit/:id"
+//           element={isLogged ? <UserEdit /> : <Navigate to="/" />}
+//         />
+
+//       </Routes>
+//     </BrowserRouter>
+//   );
+// }
+
 function App() {
-  const [isLogged, setIsLogged] = useState(false);
+  // On récupère l'état depuis le localStorage si disponible
+  const [isLogged, setIsLogged] = useState(() => {
+    return localStorage.getItem("isLogged") === "true";
+  });
+
+  const handleLoginSuccess = () => {
+    setIsLogged(true);
+    localStorage.setItem("isLogged", "true");
+  };
+
+  const handleLogout = () => {
+    setIsLogged(false);
+    localStorage.removeItem("isLogged");
+  };
 
   return (
     <BrowserRouter>
@@ -16,15 +67,18 @@ function App() {
           element={<MapView onLoginSuccess={() => setIsLogged(true)} />}
         />
           <Route path="/image/:idPoint" element={<ImagePage />} />
+        <Route path="/" element={<MapView onLoginSuccess={handleLoginSuccess} />} />
         <Route
           path="/dashboard"
-          element={
-            isLogged ? (
-              <Dashboard onLogout={() => setIsLogged(false)} />
-            ) : (
-              <Navigate to="/" replace />
-            )
-          }
+          element={isLogged ? <Dashboard onLogout={handleLogout} /> : <Navigate to="/" replace />}
+        />
+        <Route
+          path="/gestion-compte"
+          element={isLogged ? <GestionCompte /> : <Navigate to="/" replace />}
+        />
+        <Route
+          path="/users/edit/:id"
+          element={isLogged ? <UserEdit /> : <Navigate to="/" replace />}
         />
       </Routes>
     </BrowserRouter>

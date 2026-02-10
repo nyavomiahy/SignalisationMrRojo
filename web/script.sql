@@ -41,6 +41,13 @@ CREATE TABLE image_point(
     base64 TEXT NOT NULL
 );
 
+CREATE TABLE status_users(
+    id_status_users SERIAL PRIMARY KEY,
+    id_user INT REFERENCES users(id),
+    status INT NOT NULL,
+    description VARCHAR(255),
+    daty DATE NOT NULL
+)
 
 
 SELECT LEFT(base64, 40) FROM image_point;
@@ -100,3 +107,7 @@ WHERE LOWER(name_type) = 'manager'
       FROM type_account
       WHERE LOWER(name_type) = 'manager'
   );
+
+INSERT INTO status_users(id_user, status, description, daty) VALUES
+(1, 2, 'bloqué', '2024-01-01'),
+(2, 1, 'actif', '2024-01-01');
