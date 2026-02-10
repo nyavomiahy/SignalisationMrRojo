@@ -1,0 +1,7 @@
+{
+  "name": "roadwork-report",
+  "integrations": {
+    "capacitor": {}
+  },
+  "type": "vue-vite"
+}
