@@ -1,25 +1,38 @@
 <template>
   <ion-page>
     <ion-header>
-      <ion-toolbar>
-        <ion-title>Signalements Routiers</ion-title>
+  <ion-toolbar>
+    <ion-title>Signalements Routiers</ion-title>
 
-        <ion-buttons slot="end">
-          <ion-button @click="centerOnMyLocation">
-            <ion-icon :icon="locate" />
-          </ion-button>
-          
-          <ion-button @click="toggleLogin" v-if="!currentUser">
-            <ion-icon :icon="logIn" />
-          </ion-button>
-        </ion-buttons>
-      </ion-toolbar>
-    </ion-header>
+    <!-- Badge à droite -->
+    <div class="user-badge" v-if="currentUser">
+      <ion-chip color="primary">
+        <ion-icon :icon="person" slot="start" />
+        <ion-label>{{ currentUser.username || currentUser.email }}</ion-label>
+        <ion-badge color="secondary" v-if="currentUser.name_type === 'Manager'">
+          Manager
+        </ion-badge>
+      </ion-chip>
+    </div>
 
-    
-    <ion-content :fullscreen="true" class="ion-no-padding">
+    <!-- Boutons à droite -->
+    <ion-buttons slot="end">
+      <ion-button @click="centerOnMyLocation">
+        <ion-icon :icon="locate" />
+      </ion-button>
 
-      <div v-if="currentUser" class="user-badge">
+      <ion-button @click="toggleLogin" v-if="!currentUser">
+        <ion-icon :icon="logIn" />
+      </ion-button>
+    </ion-buttons>
+  </ion-toolbar>
+</ion-header>
+
+
+
+    <ion-content >
+
+      <!-- <div v-if="currentUser" class="user-badge">
         <ion-chip color="primary">
           <ion-icon :icon="person" slot="start" />
           <ion-label>{{ currentUser.username || currentUser.email }}</ion-label>
@@ -27,25 +40,34 @@
             Manager
           </ion-badge>
         </ion-chip>
-      </div>
+      </div> -->
 
       <div id="map-container"></div>
 
-      <div class="map-filters" v-if="currentUser">
-        <div 
-          class="filter-chip" 
-          :class="{ active: !showOnlyMyPoints }"
-          @click="showAllPoints"
-        >
+      <div class="map-footer" v-if="currentUser">
+        <div class="map-filters">
+          <div class="filter-chip" :class="{ active: !showOnlyMyPoints }" @click="showAllPoints">
+            <ion-icon :icon="globe"></ion-icon>
+            <span>Tous</span>
+          </div>
+
+          <div class="filter-chip" :class="{ active: showOnlyMyPoints }" @click="showMyPoints">
+            <ion-icon :icon="person"></ion-icon>
+            <span>Mes signalements</span>
+          </div>
+        </div>
+
+        <ion-fab-button @click="startAddReport" :disabled="!currentUser">
+          <ion-icon :icon="add" />
+        </ion-fab-button>
+      </div>
+      <!-- <div class="map-filters" v-if="currentUser">
+        <div class="filter-chip" :class="{ active: !showOnlyMyPoints }" @click="showAllPoints">
           <ion-icon :icon="globe"></ion-icon>
           <span>Tous</span>
         </div>
-        
-        <div 
-          class="filter-chip" 
-          :class="{ active: showOnlyMyPoints }"
-          @click="showMyPoints"
-        >
+
+        <div class="filter-chip" :class="{ active: showOnlyMyPoints }" @click="showMyPoints">
           <ion-icon :icon="person"></ion-icon>
           <span>Mes signalements</span>
         </div>
@@ -55,93 +77,75 @@
         <ion-fab-button @click="startAddReport" :disabled="!currentUser">
           <ion-icon :icon="add" />
         </ion-fab-button>
-      </ion-fab>
+      </ion-fab> -->
 
-      <div 
-        class="details-overlay" 
-        :class="{ visible: selectedReport !== null }"
-        @click="closeDetails"
-      ></div>
+      <div class="details-overlay" :class="{ visible: selectedReport !== null }" @click="closeDetails"></div>
 
-<div 
-  class="details-panel" 
-  :class="{ open: selectedReport !== null, fullscreen: isPanelFullscreen }"
-  v-if="selectedReport"
-  @touchstart="startDrag"
-  @touchmove="handleDrag"
-  @touchend="endDrag"
-  @mousedown="startDrag"
-  @mousemove="handleDrag"
-  @mouseup="endDrag"
-  @mouseleave="endDrag"
->
-  <!-- Handle pour glisser -->
-  <div class="details-handle" @click="togglePanelHeight">
-    <div class="handle-bar"></div>
-  </div>
-  
-  <div class="details-content" :style="{ height: panelHeight + 'px' }">
-    <div class="details-header">
-      <div class="details-title">
-        <h3>{{ selectedReport.siteName || 'Signalement routier' }}</h3>
-        <div class="details-subtitle">
-          <ion-icon :icon="locationOutline"></ion-icon>
-          <span>{{ selectedReport.locationName }}</span>
+      <div class="details-panel" :class="{ open: selectedReport !== null, fullscreen: isPanelFullscreen }"
+        v-if="selectedReport" @touchstart="startDrag" @touchmove="handleDrag" @touchend="endDrag" @mousedown="startDrag"
+        @mousemove="handleDrag" @mouseup="endDrag" @mouseleave="endDrag">
+        <!-- Handle pour glisser -->
+        <div class="details-handle" @click="togglePanelHeight">
+          <div class="handle-bar"></div>
+        </div>
+
+        <div class="details-content" :style="{ height: panelHeight + 'px' }">
+          <div class="details-header">
+            <div class="details-title">
+              <h3>{{ selectedReport.siteName || 'Signalement routier' }}</h3>
+              <div class="details-subtitle">
+                <ion-icon :icon="locationOutline"></ion-icon>
+                <span>{{ selectedReport.locationName }}</span>
+              </div>
+            </div>
+            <button class="details-close" @click="closeDetails">
+              <ion-icon :icon="close"></ion-icon>
+            </button>
+          </div>
+
+          <!-- Photos -->
+          <div class="details-photos" v-if="selectedReport.images && selectedReport.images.length > 0">
+            <div class="photo-item" v-for="(image, index) in selectedReport.images" :key="index">
+              <img :src="image" :alt="`Photo ${index + 1}`" />
+            </div>
+          </div>
+
+          <!-- Informations -->
+          <div class="details-info">
+            <div class="info-item">
+              <div class="info-label">Statut</div>
+              <div class="info-value">
+                <span class="status-badge" :class="getStatusClass(selectedReport.status)">
+                  {{ getStatusLabel(selectedReport.status) }}
+                </span>
+              </div>
+            </div>
+
+            <div class="info-item" v-if="selectedReport.surface">
+              <div class="info-label">Surface</div>
+              <div class="info-value">{{ selectedReport.surface }} m²</div>
+            </div>
+
+            <div class="info-item" v-if="selectedReport.budget">
+              <div class="info-label">Budget</div>
+              <div class="info-value">{{ formatBudget(selectedReport.budget) }}</div>
+            </div>
+
+            <div class="info-item" v-if="selectedReport.entrepriseName">
+              <div class="info-label">Entreprise</div>
+              <div class="info-value">{{ selectedReport.entrepriseName }}</div>
+            </div>
+
+            <div class="info-item" v-if="selectedReport.createdAt">
+              <div class="info-label">Date</div>
+              <div class="info-value">{{ selectedReport.createdAt }}</div>
+            </div>
+          </div>
         </div>
       </div>
-      <button class="details-close" @click="closeDetails">
-        <ion-icon :icon="close"></ion-icon>
-      </button>
-    </div>
-    
-    <!-- Photos -->
-    <div class="details-photos" v-if="selectedReport.images && selectedReport.images.length > 0">
-      <div class="photo-item" v-for="(image, index) in selectedReport.images" :key="index">
-        <img :src="image" :alt="`Photo ${index + 1}`" />
-      </div>
-    </div>
-    
-    <!-- Informations -->
-    <div class="details-info">
-      <div class="info-item">
-        <div class="info-label">Statut</div>
-        <div class="info-value">
-          <span class="status-badge" :class="getStatusClass(selectedReport.status)">
-            {{ getStatusLabel(selectedReport.status) }}
-          </span>
-        </div>
-      </div>
-      
-      <div class="info-item" v-if="selectedReport.surface">
-        <div class="info-label">Surface</div>
-        <div class="info-value">{{ selectedReport.surface }} m²</div>
-      </div>
-      
-      <div class="info-item" v-if="selectedReport.budget">
-        <div class="info-label">Budget</div>
-        <div class="info-value">{{ formatBudget(selectedReport.budget) }}</div>
-      </div>
-      
-      <div class="info-item" v-if="selectedReport.entrepriseName">
-        <div class="info-label">Entreprise</div>
-        <div class="info-value">{{ selectedReport.entrepriseName }}</div>
-      </div>        
-      
-      <div class="info-item" v-if="selectedReport.createdAt">
-        <div class="info-label">Date</div>
-        <div class="info-value">{{ selectedReport.createdAt }}</div>
-      </div>
-    </div>
-  </div>
-</div>
       <!-- Modal de connexion -->
-      <ion-modal
-        :is-open="showLoginModal"
-        @didDismiss="closeLoginModal"
-        :initial-breakpoint="0.6"
-        :breakpoints="[0, 0.6, 1]"
-        ref="loginModal"
-      >
+      <ion-modal :is-open="showLoginModal" @didDismiss="closeLoginModal" :initial-breakpoint="0.6"
+        :breakpoints="[0, 0.6, 1]" ref="loginModal">
         <ion-content class="ion-padding">
           <ion-toolbar>
             <ion-title>Connexion</ion-title>
@@ -151,7 +155,7 @@
               </ion-button>
             </ion-buttons>
           </ion-toolbar>
-          
+
           <div class="login-content">
             <!-- Logo -->
             <div class="login-logo ion-text-center">
@@ -167,31 +171,17 @@
               <ion-list lines="full">
                 <ion-item :class="{ 'ion-invalid': loginErrors.email }">
                   <ion-label position="stacked">Email</ion-label>
-                  <ion-input
-                    v-model="loginEmail"
-                    type="email"
-                    placeholder="email@example.com"
-                    :disabled="isLoggingIn"
-                    required
-                    @input="clearError('email')"
-                    autocomplete="email"
-                  />
+                  <ion-input v-model="loginEmail" type="email" placeholder="email@example.com" :disabled="isLoggingIn"
+                    required @input="clearError('email')" autocomplete="email" />
                   <ion-note slot="error" v-if="loginErrors.email">
                     {{ loginErrors.email }}
                   </ion-note>
                 </ion-item>
-                
+
                 <ion-item :class="{ 'ion-invalid': loginErrors.password }">
                   <ion-label position="stacked">Mot de passe</ion-label>
-                  <ion-input
-                    v-model="loginPassword"
-                    type="password"
-                    placeholder="••••••"
-                    :disabled="isLoggingIn"
-                    required
-                    @input="clearError('password')"
-                    autocomplete="current-password"
-                  />
+                  <ion-input v-model="loginPassword" type="password" placeholder="••••••" :disabled="isLoggingIn"
+                    required @input="clearError('password')" autocomplete="current-password" />
                   <ion-note slot="error" v-if="loginErrors.password">
                     {{ loginErrors.password }}
                   </ion-note>
@@ -199,13 +189,8 @@
               </ion-list>
 
               <!-- Bouton de connexion -->
-              <ion-button
-                expand="block"
-                type="submit"
-                class="ion-margin-top"
-                :disabled="isLoggingIn || !loginEmail || !loginPassword"
-                color="primary"
-              >
+              <ion-button expand="block" type="submit" class="ion-margin-top"
+                :disabled="isLoggingIn || !loginEmail || !loginPassword" color="primary">
                 <ion-spinner v-if="isLoggingIn" name="crescent" slot="start" />
                 <ion-icon v-else :icon="logIn" slot="start" />
                 Se connecter
@@ -223,12 +208,8 @@
       </ion-modal>
 
       <!-- Modal pour ajouter un signalement -->
-      <ion-modal
-        :is-open="showAddReportModal"
-        @didDismiss="cancelAddReport"
-        :initial-breakpoint="0.8"
-        :breakpoints="[0, 0.8, 1]"
-      >
+      <ion-modal :is-open="showAddReportModal" @didDismiss="cancelAddReport" :initial-breakpoint="0.8"
+        :breakpoints="[0, 0.8, 1]">
         <ion-content>
           <ion-toolbar>
             <ion-title>Nouveau Signalement</ion-title>
@@ -238,126 +219,72 @@
               </ion-button>
             </ion-buttons>
           </ion-toolbar>
-          
+
           <ion-list class="ion-padding">
             <ion-item>
               <ion-label position="stacked">Lieu</ion-label>
               <ion-input :value="newReport.locationName" readonly />
             </ion-item>
-            
+
             <ion-item>
               <ion-label position="stacked">Surface (m²)</ion-label>
-              <ion-input
-                v-model="newReport.surface"
-                type="number"
-                min="1"
-                step="1"
-                placeholder="Ex: 1200"
-              />
+              <ion-input v-model="newReport.surface" type="number" min="1" step="1" placeholder="Ex: 1200" />
             </ion-item>
-            
+
             <ion-item>
               <ion-label position="stacked">Budget estimé (Ar)</ion-label>
-              <ion-input
-                v-model="newReport.budget"
-                type="number"
-                min="1"
-                step="100"
-                placeholder="Ex: 10000"
-              />
+              <ion-input v-model="newReport.budget" type="number" min="1" step="100" placeholder="Ex: 10000" />
             </ion-item>
 
-            <ion-item>
-  <ion-label position="stacked">Niveau (1 - 10)</ion-label>
-  <ion-input
-    v-model="newReport.niveau"
-    type="number"
-    min="1"
-    max="10"
-    step="1"
-    placeholder="Ex: 5"
-  />
-</ion-item>
-
             
+
+
             <ion-item>
               <ion-label>Entreprise</ion-label>
-              <ion-select
-                v-model="newReport.entrepriseId"
-                placeholder="Sélectionner"
-                interface="action-sheet"
-              >
-                <ion-select-option
-                  v-for="entreprise in entreprises"
-                  :key="entreprise.id"
-                  :value="entreprise.id"
-                >
+              <ion-select v-model="newReport.entrepriseId" placeholder="Sélectionner" interface="action-sheet">
+                <ion-select-option v-for="entreprise in entreprises" :key="entreprise.id" :value="entreprise.id">
                   {{ entreprise.name }}
                 </ion-select-option>
               </ion-select>
             </ion-item>
-            
+
             <ion-item>
               <ion-label position="stacked">Nom du site</ion-label>
-              <ion-input
-                v-model="newReport.siteName"
-                type="text"
-                placeholder="Ex: Site A, Route principale"
-              />
+              <ion-input v-model="newReport.siteName" type="text" placeholder="Ex: Site A, Route principale" />
             </ion-item>
-            
+
             <ion-item>
               <ion-label position="stacked">Photo du site (optionnel)</ion-label>
-              
+
               <div v-if="newReport.imagePreviews.length" class="image-preview">
-                <img
-                  v-for="(img, index) in newReport.imagePreviews"
-                  :key="index"
-                  :src="img"
-                  style="width:80px;height:80px;object-fit:cover;border-radius:6px;margin-right:6px;"
-                />
+                <img v-for="(img, index) in newReport.imagePreviews" :key="index" :src="img"
+                  style="width:80px;height:80px;object-fit:cover;border-radius:6px;margin-right:6px;" />
               </div>
-              
+
               <!-- Boutons de sélection -->
               <div class="image-buttons" style="display: flex; gap: 8px; margin-top: 10px;">
                 <ion-button size="small" @click="openCamera" expand="block">
                   <ion-icon :icon="camera" slot="start" />
                   Caméra
                 </ion-button>
-                
+
                 <ion-button size="small" @click="openGallery" expand="block">
                   <ion-icon :icon="images" slot="start" />
                   Galerie
                 </ion-button>
               </div>
-              
-              <input
-                type="file"
-                accept="image/*"
-                multiple
-                ref="fileInput"
-                style="display: none;"
-                @change="onFileSelected"
-              />
+
+              <input type="file" accept="image/*" multiple ref="fileInput" style="display: none;"
+                @change="onFileSelected" />
             </ion-item>
           </ion-list>
 
           <div class="ion-padding">
-            <ion-button
-              expand="block"
-              @click="submitReport"
-              :disabled="!isReportValid"
-              color="primary"
-            >
+            <ion-button expand="block" @click="submitReport" :disabled="!isReportValid" color="primary">
               Créer le signalement
             </ion-button>
-            
-            <ion-button
-              expand="block"
-              fill="clear"
-              @click="cancelAddReport"
-              class="ion-margin-top"
-            >
+
+            <ion-button expand="block" fill="clear" @click="cancelAddReport" class="ion-margin-top">
               Annuler
             </ion-button>
           </div>
@@ -376,12 +303,7 @@
             <ion-icon :icon="checkmarkCircle" size="large" color="success" />
             <h2>Signalement créé !</h2>
             <p>Votre signalement a été enregistré avec succès.</p>
-            <ion-button
-              expand="block"
-              @click="closeConfirmationModal"
-              class="ion-margin-top"
-              color="success"
-            >
+            <ion-button expand="block" @click="closeConfirmationModal" class="ion-margin-top" color="success">
               OK
             </ion-button>
           </div>
@@ -453,6 +375,7 @@ import {
 } from '@/services/pointService';
 import { uploadPointImageBase64 } from '@/services/imageService';
 import { useRouter } from 'vue-router';
+import { Camera, CameraResultType, CameraSource } from '@capacitor/camera';
 
 const router = useRouter();
 const fileInput = ref<HTMLInputElement>();
@@ -475,6 +398,7 @@ const loginEmail = ref('');
 const loginPassword = ref('');
 const loginError = ref('');
 const loginErrors = ref({ email: '', password: '' });
+
 
 // Ajouter ces variables dans la section des variables réactives
 const isPanelFullscreen = ref(false);
@@ -504,31 +428,31 @@ const startDrag = (e: any) => {
 
 const handleDrag = (e: any) => {
   if (!isDragging.value) return;
-  
+
   const currentY = e.type.includes('mouse') ? e.clientY : e.touches[0].clientY;
-  const deltaY = startY.value - currentY; 
+  const deltaY = startY.value - currentY;
   let newHeight = startHeight.value + deltaY;
-  
+
   // Limites min et max
-  const minHeight = Math.floor(window.innerHeight * 0.3); 
-  const maxHeight = calculateFullHeight(); 
-  
+  const minHeight = Math.floor(window.innerHeight * 0.3);
+  const maxHeight = calculateFullHeight();
+
   if (newHeight < minHeight) newHeight = minHeight;
   if (newHeight > maxHeight) newHeight = maxHeight;
-  
+
   panelHeight.value = newHeight;
   e.preventDefault();
 };
 
 const endDrag = () => {
   if (!isDragging.value) return;
-  
+
   isDragging.value = false;
-  
+
   // Déterminer si on doit basculer en fullscreen ou pas
   const screenHeight = window.innerHeight;
   const halfHeight = Math.floor(screenHeight * 0.5);
-  
+
   if (panelHeight.value > halfHeight * 1.2) { // Si > 60% de l'écran
     isPanelFullscreen.value = true;
     panelHeight.value = calculateFullHeight();
@@ -589,14 +513,12 @@ const entreprises = ref<Array<{ id: string; name: string }>>([
 const isReportValid = computed(() => {
   return (
     newReport.value.surface &&
-    newReport.value.budget &&
-    newReport.value.niveau &&            // ✅ AJOUT
+    newReport.value.budget &&          // ✅ AJOUT
     newReport.value.entrepriseId &&
     newReport.value.siteName &&
     parseInt(newReport.value.surface) > 0 &&
-    parseInt(newReport.value.budget) > 0 &&
-    parseInt(newReport.value.niveau) >= 1 &&   // ✅ AJOUT
-    parseInt(newReport.value.niveau) <= 10     // ✅ AJOUT
+    parseInt(newReport.value.budget) > 0 
+    // ✅ AJOUT
   );
 });
 
@@ -784,30 +706,30 @@ const initMap = async () => {
   } catch {
     map = L.map('map-container').setView(ANTANANARIVO_CENTER, 13);
   }
-  
+
   L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
     attribution: '© OpenStreetMap',
     maxZoom: 19
   }).addTo(map);
-  
+
   map.on('click', async (e: L.LeafletMouseEvent) => {
     if (!currentUser.value) {
       await askLoginBeforeAdd();
       return;
     }
-    
+
     if (clickMarker) {
       map?.removeLayer(clickMarker);
       clickMarker = null;
     }
-    
+
     clickMarker = L.marker([e.latlng.lat, e.latlng.lng], {
       icon: createPinEmojiMarker('1', true),
       zIndexOffset: 1000
     }).addTo(map!);
-    
+
     const locationName = await getLocationName(e.latlng.lat, e.latlng.lng);
-    
+
     newReport.value = {
       lat: e.latlng.lat,
       lng: e.latlng.lng,
@@ -819,10 +741,10 @@ const initMap = async () => {
       imageFiles: [],
       imagePreviews: []
     };
-    
+
     showAddReportModal.value = true;
   });
-  
+
   loadPoints();
 };
 
@@ -844,7 +766,7 @@ const addMarkerToMap = async (point: any, isMine: boolean = false) => {
 
   const lat = parseFloat(point.latitude) || 0;
   const lng = parseFloat(point.longitude) || 0;
-  
+
   console.log('📍 Ajout marqueur:', {
     id: point.id,
     lat: lat,
@@ -854,36 +776,36 @@ const addMarkerToMap = async (point: any, isMine: boolean = false) => {
     typeIdEntreprise: typeof point.id_entreprise,
     entreprisesDisponibles: entreprises.value
   });
-  
+
   const marker = L.marker([lat, lng], {
     icon: createPinEmojiMarker(point.status, isMine)
   }).addTo(map);
   let entrepriseName = 'Inconnue';
-  
+
   if (point.id_entreprise) {
     const entrepriseIdStr = String(point.id_entreprise);
-    
+
     // Chercher par ID string
     let entreprise = entreprises.value.find(e => String(e.id) === entrepriseIdStr);
-    
+
     // Si non trouvé, chercher par correspondance partielle
     if (!entreprise) {
-      entreprise = entreprises.value.find(e => 
-        e.id.toString().includes(entrepriseIdStr) || 
+      entreprise = entreprises.value.find(e =>
+        e.id.toString().includes(entrepriseIdStr) ||
         entrepriseIdStr.includes(e.id.toString())
       );
     }
-    
+
     // Si toujours non trouvé, essayer de convertir en nombre
     if (!entreprise) {
       const entrepriseIdNum = parseInt(point.id_entreprise);
       if (!isNaN(entrepriseIdNum)) {
-        entreprise = entreprises.value.find(e => 
+        entreprise = entreprises.value.find(e =>
           parseInt(e.id) === entrepriseIdNum
         );
       }
     }
-    
+
     if (entreprise) {
       entrepriseName = entreprise.name;
       console.log('✅ Entreprise trouvée:', entrepriseName);
@@ -892,7 +814,7 @@ const addMarkerToMap = async (point: any, isMine: boolean = false) => {
       console.log('📋 Liste des entreprises disponibles:', entreprises.value);
     }
   }
-  
+
   // Formater la date
   let dateFormatted = 'Date inconnue';
   if (point.createdAt) {
@@ -941,9 +863,9 @@ const addMarkerToMap = async (point: any, isMine: boolean = false) => {
 
   marker.on('click', async () => {
     console.log('📍 Marqueur cliqué:', point.id);
-    
 
-    
+
+
     try {
       // Récupérer les images (optionnel)
       let images = [];
@@ -952,7 +874,7 @@ const addMarkerToMap = async (point: any, isMine: boolean = false) => {
       } catch (error) {
         console.log('⚠️ Pas d\'images pour ce point:', error);
       }
-      
+
       // Créer l'objet pour le volet de détails
       selectedReport.value = {
         id: point.id,
@@ -965,15 +887,15 @@ const addMarkerToMap = async (point: any, isMine: boolean = false) => {
         createdAt: dateFormatted, // Utiliser la date formatée
         images: images
       };
-      
+
       console.log('📋 Données chargées pour le volet:', selectedReport.value);
-      
+
       // Centrer la carte sur le marqueur
       map?.panTo([lat, lng], {
         animate: true,
         duration: 0.3
       });
-      
+
     } catch (error) {
       console.error('❌ Erreur lors du chargement des détails:', error);
       showToast('Erreur lors du chargement des détails', 'danger');
@@ -1094,7 +1016,6 @@ const cancelAddReport = () => {
     budget: '',
     entrepriseId: '',
     siteName: '',
-    niveau: '',
     imageFiles: [],
     imagePreviews: []
   };
@@ -1102,26 +1023,25 @@ const cancelAddReport = () => {
 
 const submitReport = async () => {
   if (!isReportValid.value || !currentUser.value) return;
-  
+
   const loading = await loadingController.create({
     message: 'Création du signalement...',
     spinner: 'crescent'
   });
   await loading.present();
-  
+
   try {
     const pointData = {
-  latitude: newReport.value.lat,
-  longitude: newReport.value.lng,
-  surface: parseInt(newReport.value.surface),
-  budget: parseInt(newReport.value.budget),
-  niveau: parseInt(newReport.value.niveau),   // ✅ AJOUT
-  id_entreprise: newReport.value.entrepriseId,
-  nameplace: newReport.value.siteName,
-  status: '1'
-};
+      latitude: newReport.value.lat,
+      longitude: newReport.value.lng,
+      surface: parseInt(newReport.value.surface),
+      budget: parseInt(newReport.value.budget),  // ✅ AJOUT
+      id_entreprise: newReport.value.entrepriseId,
+      nameplace: newReport.value.siteName,
+      status: '1'
+    };
 
-    
+
     let result;
     if (newReport.value.imageFiles.length > 0) {
       const pointResult = await createPoint(pointData);
@@ -1135,9 +1055,9 @@ const submitReport = async () => {
     } else {
       result = await createPoint(pointData);
     }
-    
+
     await loading.dismiss();
-    
+
     if (result.success) {
       showToast('Signalement créé avec succès!', 'success');
       cancelAddReport();
@@ -1172,7 +1092,7 @@ const clearError = (field: string) => {
 const validateLoginForm = () => {
   let isValid = true;
   loginErrors.value = { email: '', password: '' };
-  
+
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
   if (!loginEmail.value) {
     loginErrors.value.email = 'Email requis';
@@ -1181,12 +1101,12 @@ const validateLoginForm = () => {
     loginErrors.value.email = 'Format email invalide';
     isValid = false;
   }
-  
+
   if (!loginPassword.value) {
     loginErrors.value.password = 'Mot de passe requis';
     isValid = false;
   }
-  
+
   return isValid;
 };
 
@@ -1218,7 +1138,7 @@ const doLogin = async () => {
       currentUser.value = result.user;
       showToast(`Bienvenue ${result.user.username || result.user.email}`, 'success');
       closeLoginModal();
-      
+
       // Charger les entreprises
       try {
         const entreprisesResult = await getAllEntreprises();
@@ -1231,7 +1151,7 @@ const doLogin = async () => {
       } catch (error) {
         console.error('Erreur chargement entreprises:', error);
       }
-      
+
       loadPoints();
     } else {
       loginError.value = result?.error || 'Identifiants incorrects';
@@ -1246,20 +1166,67 @@ const doLogin = async () => {
   }
 };
 
-// Gestion des images
-const openCamera = () => {
-  if (!fileInput.value) return;
-  fileInput.value.setAttribute('capture', 'environment');
-  fileInput.value.accept = 'image/*';
-  fileInput.value.click();
+const openCamera = async () => {
+  try {
+    const photo = await Camera.getPhoto({
+      quality: 80,
+      resultType: CameraResultType.Base64, // base64 pour upload
+      source: CameraSource.Camera
+    });
+
+    if (!photo || !photo.base64String) return;
+
+    // Créer un "File" à partir du base64
+    const byteString = atob(photo.base64String);
+    const arrayBuffer = new Uint8Array(byteString.length);
+    for (let i = 0; i < byteString.length; i++) {
+      arrayBuffer[i] = byteString.charCodeAt(i);
+    }
+    const file = new File([arrayBuffer], `photo_${Date.now()}.jpg`, {
+      type: 'image/jpeg'
+    });
+
+    newReport.value.imageFiles.push(file);
+    newReport.value.imagePreviews.push(`data:image/jpeg;base64,${photo.base64String}`);
+  } catch (error) {
+    console.error('Erreur ouverture caméra:', error);
+    showToast('Impossible d\'ouvrir la caméra', 'danger');
+  }
 };
 
-const openGallery = () => {
-  if (!fileInput.value) return;
-  fileInput.value.removeAttribute('capture');
-  fileInput.value.accept = 'image/*';
-  fileInput.value.click();
+
+const base64ToBlob = (base64: string) => {
+  const byteCharacters = atob(base64.split(',')[1]);
+  const byteNumbers = new Array(byteCharacters.length);
+  for (let i = 0; i < byteCharacters.length; i++) {
+    byteNumbers[i] = byteCharacters.charCodeAt(i);
+  }
+  return new Blob([new Uint8Array(byteNumbers)], { type: 'image/jpeg' });
 };
+
+
+const openGallery = async () => {
+  try {
+    const photo = await Camera.getPhoto({
+      quality: 80,
+      resultType: CameraResultType.Base64,
+      source: CameraSource.Photos
+    });
+
+    if (!photo || !photo.base64String) return;
+
+    const base64Data = 'data:image/jpeg;base64,' + photo.base64String;
+    newReport.value.imagePreviews.push(base64Data);
+
+    const blob = base64ToBlob(base64Data);
+    const file = new File([blob], `photo_${Date.now()}.jpg`, { type: 'image/jpeg' });
+    newReport.value.imageFiles.push(file);
+
+  } catch (err) {
+    console.error('Gallery error:', err);
+  }
+};
+
 
 const onFileSelected = (event: Event) => {
   const target = event.target as HTMLInputElement;
@@ -1299,12 +1266,12 @@ const showToast = async (
 // Initialisation
 onMounted(async () => {
   console.log('Initialisation Map.vue');
-  
+
   initMap();
-  
+
   currentUser.value = getCurrentUserFromStorage();
   console.log('Utilisateur au démarrage:', currentUser.value);
-  
+
   if (currentUser.value) {
     try {
       const entreprisesResult = await getAllEntreprises();
@@ -1319,7 +1286,7 @@ onMounted(async () => {
     }
     loadPoints();
   }
-  
+
   onUnmounted(() => {
     if (map) {
       map.remove();
@@ -1341,65 +1308,58 @@ watch(currentUser, (newVal) => {
 }
 
 .user-badge {
-  position: absolute;
-  top: 70px;
-  left: 10px;
-  z-index: 1000;
-  pointer-events: none;
+  display: flex;
+  align-items: center;
+  margin-right: 10px; /* espace avec les boutons */
 }
+
 
 .user-badge ion-chip {
   backdrop-filter: blur(10px);
-  background: rgba(var(--ion-color-primary-rgb), 0.9);
+  background: blue;
 }
 
-/* ----- FILTRES STYLE GOOGLE MAPS ----- */
-.map-filters {
-  position: absolute;
-  top: 70px;
-  left: 50%;
-  transform: translateX(-50%);
+/* Styles pour le footer de la carte */
+.map-footer {
+  position: fixed;
+  bottom: env(safe-area-inset-bottom, 16px); /* 16px comme fallback si env() non supporté */
+  left: 0;
+  width: 100%;
   z-index: 1000;
+  padding: 10px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: rgba(163, 162, 162, 0.9);
+}
+
+
+/* Ajustement des filtres */
+.map-filters {
   display: flex;
   gap: 8px;
-  background: white;
-  padding: 6px;
-  border-radius: 50px;
-  box-shadow: 
-    0 2px 8px rgba(0, 0, 0, 0.1),
-    0 4px 16px rgba(0, 0, 0, 0.08);
-  backdrop-filter: blur(10px);
 }
 
 .filter-chip {
+  cursor: pointer;
+  padding: 6px 12px;
+  border-radius: 16px;
+  background: #7d7c7c;
   display: flex;
   align-items: center;
-  gap: 6px;
-  padding: 8px 16px;
-  border-radius: 50px;
-  background: white;
-  border: 1.5px solid #E0E0E0;
-  font-size: 14px;
-  font-weight: 500;
-  color: #5F6368;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  white-space: nowrap;
-}
-
-.filter-chip:active {
-  transform: scale(0.95);
+  gap: 4px;
+  transition: background 0.2s;
 }
 
 .filter-chip.active {
-  background: #1A73E8;
+  background: #0e4107;
   color: white;
-  border-color: #1A73E8;
 }
 
-.filter-chip ion-icon {
-  font-size: 18px;
+ion-fab-button {
+  position: static; /* laisse le bouton dans le footer */
 }
+
 
 /* ----- PANNEAU DE DÉTAILS EN BAS ----- */
 .details-panel {
@@ -1409,7 +1369,7 @@ watch(currentUser, (newVal) => {
   right: 0;
   background: white;
   border-radius: 20px 20px 0 0;
-  box-shadow: 
+  box-shadow:
     0 -2px 16px rgba(0, 0, 0, 0.1),
     0 -4px 32px rgba(0, 0, 0, 0.08);
   z-index: 2000;
@@ -1640,6 +1600,7 @@ watch(currentUser, (newVal) => {
   margin-top: 15px;
 }
 
+
 /* ----- MARKERS ----- */
 :deep(.pin-marker) {
   background: transparent;
@@ -1651,7 +1612,7 @@ watch(currentUser, (newVal) => {
   border-radius: 50% 50% 50% 0;
   transform: rotate(-45deg);
   position: relative;
-  box-shadow: 0 4px 10px rgba(0,0,0,0.35);
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.35);
 }
 
 :deep(.pin span) {
@@ -1675,7 +1636,7 @@ ion-fab-button {
   --background: #1A73E8;
   --background-activated: #1557B0;
   --background-hover: #1E88E5;
-  --box-shadow: 
+  --box-shadow:
     0 2px 8px rgba(26, 115, 232, 0.3),
     0 4px 16px rgba(26, 115, 232, 0.2);
   --border-radius: 50%;
@@ -1710,61 +1671,55 @@ ion-fab-button:disabled {
 
 /* ----- RESPONSIVE ----- */
 @media (max-width: 768px) {
-  .user-badge {
-    top: 60px;
-    left: 5px;
-  }
   
-  .user-badge ion-chip {
-    font-size: 12px;
-    padding: 4px 8px;
-  }
+
   
+
   .map-filters {
     top: 60px;
     padding: 4px;
     gap: 6px;
   }
-  
+
   .filter-chip {
     padding: 6px 12px;
     font-size: 13px;
   }
-  
+
   .filter-chip ion-icon {
     font-size: 16px;
   }
-  
+
   .login-content {
     padding: 0 12px;
   }
-  
+
   .login-content ion-label {
     font-size: 13px;
   }
-  
+
   .details-panel {
     max-height: 75vh;
   }
-  
+
   .details-title h3 {
     font-size: 16px;
   }
-  
+
   .photo-item {
     flex: 0 0 240px;
     height: 160px;
   }
-  
+
   .info-label {
     flex: 0 0 90px;
     font-size: 12px;
   }
-  
+
   .info-value {
     font-size: 13px;
   }
-  
+
   ion-fab-button {
     --size: 52px;
   }
@@ -1782,7 +1737,7 @@ ion-fab-button:disabled {
   right: 0;
   background: white;
   border-radius: 20px 20px 0 0;
-  box-shadow: 
+  box-shadow:
     0 -2px 16px rgba(0, 0, 0, 0.1),
     0 -4px 32px rgba(0, 0, 0, 0.08);
   z-index: 2000;
@@ -1791,7 +1746,8 @@ ion-fab-button:disabled {
   overflow: hidden;
   display: flex;
   flex-direction: column;
-  touch-action: none; /* Important pour le glissement */
+  touch-action: none;
+  /* Important pour le glissement */
 }
 
 .details-panel.open {
@@ -1989,11 +1945,14 @@ ion-fab-button:disabled {
   pointer-events: all;
 }
 
+
+
 /* Animation de glissement */
 @keyframes slideUp {
   from {
     transform: translateY(100%);
   }
+
   to {
     transform: translateY(0);
   }
@@ -2003,6 +1962,7 @@ ion-fab-button:disabled {
   from {
     transform: translateY(0);
   }
+
   to {
     transform: translateY(100%);
   }

@@ -33,10 +33,6 @@
                 <h3>{{ stats.mine || 0 }}</h3>
                 <p>Mes signalements</p>
               </ion-col>
-              <ion-col class="ion-text-center">
-                <h3>{{ stats.active || 0 }}</h3>
-                <p>En cours</p>
-              </ion-col>
             </ion-row>
           </ion-grid>
         </ion-card-content>
@@ -237,16 +233,22 @@ const showLogoutConfirm = async () => {
 
 const logout = () => {
   logoutUserFirestore();
-  
-  // Afficher un toast
+
+  // Afficher le toast
   toastController.create({
     message: 'Déconnexion réussie',
     duration: 2000,
     color: 'success'
-  });
-  
+  }).then(toast => {
+    toast.present();
 
+    // Redirection + reload
+    router.replace('/tabs/map').then(() => {
+      window.location.reload();
+    });
+  });
 };
+
 
 onMounted(() => {
   loadUserData();

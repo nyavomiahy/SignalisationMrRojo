@@ -52,41 +52,46 @@ import {
 import { ref } from 'vue';
 import { useRouter, useRoute } from 'vue-router';
 import { loginUserWithFirestore } from '@/services/userService';
+import { setCurrentUser } from '@/stores/userStore';
 
 const email = ref('');
 const password = ref('');
 const router = useRouter();
 const route = useRoute();
 
-const login = async () => {
-  try {
-    const user = await loginUserWithFirestore(
-      email.value,
-      password.value
-    );
+const login = () => {
+  loginUserWithFirestore(email.value, password.value)
+    .then(user => {
+      setCurrentUser(user);
 
-    // ✅ SI ON EST ICI → LOGIN OK
-    console.log('Utilisateur connecté:', user);
+      // ✅ SI ON EST ICI → LOGIN OK
+      console.log('Utilisateur connecté:', user);
 
-    const redirect = route.query.redirect || '/tabs/map';
-    router.replace(redirect as string);
+      // Forcer le toast
+      toastController.create({
+        message: `Bienvenue ${user.username}`,
+        duration: 1500,
+        color: 'success'
+      }).then(toast => {
+        toast.present();
 
-    const toast = await toastController.create({
-      message: `Bienvenue ${user.username}`,
-      duration: 1500,
-      color: 'success'
+        // Redirection + reload
+        router.replace('/tabs/map').then(() => {
+          window.location.reload();
+        });
+      });
+    })
+    .catch(error => {
+      toastController.create({
+        message: 'Email ou mot de passe incorrect',
+        duration: 2000,
+        color: 'danger'
+      }).then(toast => {
+        toast.present();
+      });
     });
-    toast.present();
-
-  } catch (error) {
-    const toast = await toastController.create({
-      message: 'Email ou mot de passe incorrect',
-      duration: 2000,
-      color: 'danger'
-    });
-    toast.present();
-  }
 };
+
 
 </script>
 
